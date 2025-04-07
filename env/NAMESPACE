@@ -1,0 +1,6 @@
+export(volcano_colors)
+export(volcanoPlot)
+export(getConditions)
+export(doDEseq)
+export(getDEseqResults)
+export(cutPvalue)
