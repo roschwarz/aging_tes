@@ -9,7 +9,6 @@ if (!exists("deseq.te.merged")) {
     
 }
 
-
 # change order of tissues
 deseq.te.merged$tissue <- factor(deseq.te.merged$tissue, 
                                  levels = c('brain', 'skin', 'blood'))
