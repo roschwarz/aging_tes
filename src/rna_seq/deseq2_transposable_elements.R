@@ -1,24 +1,30 @@
-# --------------------------------- Notes--- -----------------------------------
-# This script is used for the RNA-Seq quantification
+# ==============================================================================
+# RNA-Seq Expression Analysis for Transposable Elements (TEs)
+# ==============================================================================
+# This script performs differential expression analysis of transposable elements
+# (TEs) across various tissues using RNA-Seq count data processed via SalmonTE.
+# It utilizes DESeq2 for normalization and statistical testing, supports parallel
+# execution for scalability, and merges results across tissues for downstream use.
 #
-# Input:
+# ------------------------------------------------------------------------------
+# INPUT:
+# - Count tables (SalmonTE output) for each tissue:
+#   ./results/rna_seq/<tissue>/alignment_SalmonTE/EXPR.csv
 #
-# - Count tables of the respective tissue (EXPR.csv) in ./results/rna_seq/<tissue>/alignment_SalmonTE/EXPR.csv
-# - te region file for deseq analysis for TE islands 
+# OUTPUT:
+# - DESeq2 results and objects:
+#   ./results/rna_seq/deseq2/dds_TE_instances_salmonTE.Rdata         : DESeq2 dds objects
+#   ./results/rna_seq/deseq2/deseq_TE_instances_salmonTE.Rdata     : DESeq2 result objects
+#   ./results/tables/02_deseq_results_te.csv     : Merged results (CSV)
 #
-# Output:
-#   - ./results/rna_seq/deseq2/
+# DEPENDENCIES:
+# - Custom package: `aging_tes` (loaded via `devtools`)
+# - Bioconductor: `BiocParallel`, `DESeq2`
+# - Others: `future.apply`, `dplyr`, `tibble`
 #
+# ==============================================================================
 
-# TE instances
-#
-# dds.TE.Salmon.Rdata - DESeq2 dds object for TEs base on SalmonTE
-# deseq.TE.SalmonTE.Rdata - DESeq2 results for TEs based on SalmonTE counts
-# 02_deseq_results_te.csv - tissue merged csv file of DESeq results of TE
-#   instances
-#
-
-
+# Load custom environment if not already loaded
 if (!"aging_tes" %in% loadedNamespaces()) {
     devtools::load_all("env/")
 }
@@ -28,18 +34,18 @@ if (!dir.exists(rna_seq_deseq_dir)) {
     dir.create(rna_seq_deseq_dir, recursive = TRUE)
 }
 
-# ----- Quantification of TE expression during aging in different tissues ------
+# ------------------------------------------------------------------------------
+# Step 1: Run DESeq2 for each tissue if results do not exist
+# ------------------------------------------------------------------------------
 
-# read the count tables and store them in a list
-# path to count tables can be found in 01_load_environment
-if (!file.exists(paste0(rna_seq_deseq_dir, deseq_results))) {
+if (!file.exists(paste0(rna_seq_deseq_dir, deseq_results_te))) {
     
-    # Setup for Parallel
+    # Load required libraries for parallel processing
     library(BiocParallel)
-    register(MulticoreParam(workers = 4))
-    
     library(future.apply)
-    plan(multicore, workers = 3) 
+    
+    register(MulticoreParam(workers = 4)) # BiocParallel
+    plan(multicore, workers = 3)  # future apply
     
     dds_list <- future_lapply(tissues, function(tissue) {
         message("Running DESeq2 for ", tissue)
@@ -62,8 +68,8 @@ if (!file.exists(paste0(rna_seq_deseq_dir, deseq_results))) {
     
     names(dds_list) <- tissues
     
-    
-    options(future.globals.maxSize = 4 * 1024^3) # need to increase memory because it is limited to 500 mb
+    # Increase memory limit for large DESeq2 results
+    options(future.globals.maxSize = 4 * 1024^3)
     
     res_list <- future_lapply(tissues, function(tissue) {
         res <-  getDEseqResults(
@@ -79,32 +85,19 @@ if (!file.exists(paste0(rna_seq_deseq_dir, deseq_results))) {
     names(res_list) <- tissues
     
     save(dds_list,
-         file = paste0(rna_seq_deseq_dir, deseq_dds))
+         file = paste0(rna_seq_deseq_dir, deseq_dds_te))
     save(res_list,
-         file = paste0(rna_seq_deseq_dir, deseq_results))
+         file = paste0(rna_seq_deseq_dir, deseq_results_te))
     
 }else{
     
-    res_list <- loadRdata(paste0(rna_seq_deseq_dir, deseq_results))
+    res_list <- loadRdata(paste0(rna_seq_deseq_dir, deseq_results_te))
 }
 
-#####
-#
-# Notiz
-#
-# update der Ordnerstruktur
-# Letzter schritt die DESeq analyse parallelisiert
-#
-# Next steps:
-#   - mache skripte fur gene un TE islands
-#   - check ob du Volcanos hier mit ins skript intigierst
-#   - schliesse Kapitel eins von deinem Manuskript ab mit allen benoetigten bilder und skripten
-#   - commit to git
+# ------------------------------------------------------------------------------
+# Step 2: Merge DESeq2 results across tissues into one table
+# ------------------------------------------------------------------------------
 
-
-
-
-# Merge the results of the different tissues to get one huge table with all results
 deseq.te.merged <- do.call("rbind",
                            sapply(names(res_list), simplify = F, function(x) {
                                res_list[[x]] %>%
@@ -113,6 +106,7 @@ deseq.te.merged <- do.call("rbind",
 
                            }))
 
+# Annotate merged results with TE metadata
 deseq.te.merged <- merge(deseq.te.merged, te.annotation, by = 'te_id')
 
 write.table(deseq.te.merged,
@@ -121,7 +115,3 @@ write.table(deseq.te.merged,
             row.names = F,
             quote = F,
             sep = ',')
-
-rm(deseq.te.merged, deseq.te)
-
-
