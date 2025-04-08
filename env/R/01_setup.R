@@ -1,7 +1,11 @@
-
 ###########
 # general #
 ###########
+
+# Helper: Timestamped logging
+logmsg <- function(msg) {
+    cat(format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "-", msg, "\n")
+}
 
 # ------------------------------------------------------------------------------
 # Load
