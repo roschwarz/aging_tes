@@ -26,6 +26,10 @@ theme_rob <- function(base_size = 14, base_family = 'sans'){
     
 }
 
+# set the theme of interest
+theme_set(theme_rob(12))
+
+
 #================== Coloring  strips =============================
 # To-Do, make it possible to submit the colors, then I guess you can
 # add it to your blackRCloud
@@ -70,10 +74,6 @@ volcanoPlot <- function(df,
     df <- df %>% filter(!is.na(padj))
     x_max <- max(abs(df$log2FoldChange)) + 0.5
     
-    # #colors <- setNames(c("#d1495b", "gray", "#66a182"), c("Up", "Not Sig", "Down"))
-    # colors <-
-    #     setNames(c("#e63946", "gray", "#457b9d"), c("Up", "Not Sig", "Down"))
-    
     df$Expression <-
         ifelse(
             df$padj <= FDR &  df$log2FoldChange > 0,
@@ -102,7 +102,7 @@ volcanoPlot <- function(df,
             xlim(c(-x_max, x_max)) +
             labs(y = bquote(-log[10](FDR)),
                  x = expression(log[2] * "(fold change)")) +
-            scale_color_manual(values = volcano_colors) +
+            scale_color_manual(values = direction.color) +
             theme_bw() +
             theme(
                 legend.title = element_blank(),
@@ -137,7 +137,7 @@ volcanoPlot <- function(df,
             facet_grid(cols = vars(!!sym(facet))) +
             geom_text(
                 data = n_up_regulated,
-                color = "#e63946",
+                color = direction.color[['up']],
                 mapping = aes(
                     x = x_max,
                     y = y_count_label,
@@ -148,7 +148,7 @@ volcanoPlot <- function(df,
             ) +
             geom_text(
                 data = n_down_regulated,
-                color = "#457b9d",
+                color = direction.color[['down']],
                 mapping = aes(
                     x = -x_max,
                     y = y_count_label,
@@ -168,12 +168,12 @@ volcanoPlot <- function(df,
             annotate(geom = 'label',
                      x = x_max, y = y_count_label,
                      hjust = 1,
-                     color = "#e63946", 
+                     color = direction.color[['up']], 
                      label = paste0("n=", n_up_regulated)) +
             annotate(geom = 'label',
                      x = -x_max, y = y_count_label,
                      hjust = 0,
-                     color = "#457b9d",
+                     color = direction.color[['down']],
                      label = paste0("n=", n_down_regulated))
         
     }
