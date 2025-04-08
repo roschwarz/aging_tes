@@ -1,33 +1,30 @@
 #' DESeq2 Utilities for Modular Analysis of Gene and TE Expression
 #' Author: Robert Schwarz
 #' Last updated: 2025-04-04
-#' 
 
 library(DESeq2)
 library(tidyverse)
 
-# Helper: Timestamped logging
-logmsg <- function(msg) {
-    cat(format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "-", msg, "\n")
-}
-
-
-# Filter function placeholder (you can replace with your own)
+# Filter function
 filterCounts <- function(count.matrix, type) {
     
     if (type == "te") {
+        
+        logmsg("Filter count matrix for transposable elements (ID begins with chr)")
         count.matrix <- count.matrix %>% 
             rownames_to_column(var = 'id') %>% 
             filter(grepl('^chr', id)) %>% 
             column_to_rownames(var = 'id')
         return(count.matrix)
     } else if (type == "gene") {
+        logmsg("Filter count matrix for genes (ID begins with ENS)")
         count.matrix <- count.matrix %>% 
             rownames_to_column(var = 'id') %>% 
             filter(grepl('^ENS', id)) %>% 
             column_to_rownames(var = 'id')
         return(count.matrix)
     } else {
+        logmsg(paste("Count matrix can not be filtered for", type))
         return(count.matrix)
     }
 }
@@ -108,7 +105,7 @@ getDEseqResults <- function(dds,
     if (is.null(coefficient)) {
         
         coefficient <- resultsNames(dds)[2]
-        logmsg(paste("ℹ️ Automatically using coefficient:", coefficient))
+        logmsg(paste("Automatically using coefficient:", coefficient))
     }
     
     
