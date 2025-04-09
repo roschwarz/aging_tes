@@ -175,7 +175,7 @@ load_rna_seq_env <- function(){
     
     deseq_dds_gene <<- "dds_genes_salmonTE.Rdata"
     deseq_results_gene <<- "deseq_genes_salmonTE.Rdata"
-    
+    deseq_results_gene_csv <<- "02_deseq_results_genes.csv"
     
     base_path <- paste0(getwd(), "/env/R/data")
     

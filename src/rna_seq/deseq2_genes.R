@@ -29,10 +29,9 @@ if (!"aging_tes" %in% loadedNamespaces()) {
     devtools::load_all("env/")
 }
 
-
-if (!dir.exists(rna_seq_deseq_dir)) {
-    dir.create(rna_seq_deseq_dir, recursive = TRUE)
-}
+aging_tes::load_analysis_env()
+aging_tes::load_annotations()
+aging_tes::load_rna_seq_env()
 
 # ------------------------------------------------------------------------------
 # Step 1: Run DESeq2 for each tissue if results do not exist
@@ -110,7 +109,7 @@ deseq.gene.merged <- merge(deseq.gene.merged,
                             by = 'ensembl_gene_id')
 
 write.table(deseq.gene.merged,
-            file = paste0(table_dir, '02_deseq_results_gene.csv'), 
+            file = paste0(table_dir, deseq_results_gene_csv), 
             col.names = T, 
             row.names = F,
             quote = F,
