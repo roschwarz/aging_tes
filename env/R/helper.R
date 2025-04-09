@@ -49,3 +49,35 @@ cutPvalue <- function(df, FDR_CAP = 0.00001){
     
     return(df)
 }
+
+#================== Coloring  strips =============================
+# To-Do, make it possible to submit the colors, then I guess you can
+# add it to your blackRCloud
+color_strips <- function(pl, 
+                         bg_cols = c('#264653', '#2A9D8F', "#E9C46A", "#af7ac5", "#F2CC8F", "#3D405B", '#81B29A'),
+                         text_cols = c('#ffffff', '#ffffff', "#000000", "#000000", "#000000", "#ffffff", '#000000')){
+    
+    g <- ggplot_gtable(ggplot_build(pl))
+    
+    strip_both <- which(grepl('strip-', g$layout$name))
+    
+    k <- 1
+    
+    if (length(strip_both) != length(bg_cols)) {
+        print('Sorry the number of delivired colours is different compared to the number of facetts.')
+        return(g)
+    }
+    
+    for (i in seq_along(strip_both)) {
+        
+        j <- which(grepl('rect', g$grobs[[strip_both[i]]]$grobs[[1]]$childrenOrder))
+        l <- which(grepl('titleGrob', g$grobs[[strip_both[i]]]$grobs[[1]]$childrenOrder))
+        
+        g$grobs[[strip_both[i]]]$grobs[[1]]$children[[j]]$gp$fill <- bg_cols[i]
+        g$grobs[[strip_both[i]]]$grobs[[1]]$children[[l]]$children[[1]]$gp$col <- text_cols[i]
+        k <- k + 1
+    }
+    
+    return(g)
+} 
+

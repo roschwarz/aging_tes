@@ -3,14 +3,9 @@ if (!"aging_tes" %in% loadedNamespaces()) {
     devtools::load_all("env/")
 }
 
-if (!exists("deseq.te.merged")) {
-    
-    deseq.te.merged <- read.csv(paste0(table_dir, '02_deseq_results_te_instances.csv'))
-    
-}
+aging_tes::load_plotting_env()
+aging_tes::load_rna_seq_env()
 
-library(circlize)
-library(ComplexHeatmap)
 
 # Using ComplexHeatmap package
 te.mean.log2 <- deseq.te.merged %>% 

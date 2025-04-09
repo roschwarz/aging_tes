@@ -1,66 +1,9 @@
-# from https://benjaminlouis-stat.fr/en/blog/2020-05-21-astuces-ggplot-rmarkdown/
-theme_rob <- function(base_size = 14, base_family = 'sans'){
-    
-    theme_bw(base_size = base_size, base_family = base_family) %+replace%
-        theme(
-            
-            plot.title = element_text(size = rel(1), margin = margin(0,0,5,0), hjust = 0.5),
-            
-            panel.grid.minor = element_blank(),
-            
-            # axes
-            axis.title = element_text(size = rel(0.85), face = "bold"),
-            axis.text = element_text(size = rel(0.70)),
-            
-            # Legend
-            legend.title = element_text(size = rel(0.85), face = "bold"),
-            legend.text = element_text(size = rel(0.70)),
-            legend.background = element_rect(colour = 'lightgrey'),
-            
-            # Facett stuff
-            panel.spacing.x = unit(0, "lines"),
-            strip.background = element_rect(fill = 'white'),
-            strip.text = element_text(size = rel(0.85), face = "bold")
-        )
-    
-    
-}
-
-# set the theme of interest
-theme_set(theme_rob(12))
-
-
-#================== Coloring  strips =============================
-# To-Do, make it possible to submit the colors, then I guess you can
-# add it to your blackRCloud
-color_strips <- function(pl, 
-                         bg_cols = c('#264653', '#2A9D8F', "#E9C46A", "#af7ac5", "#F2CC8F", "#3D405B", '#81B29A'),
-                         text_cols = c('#ffffff', '#ffffff', "#000000", "#000000", "#000000", "#ffffff", '#000000')){
-    
-    g <- ggplot_gtable(ggplot_build(pl))
-    
-    strip_both <- which(grepl('strip-', g$layout$name))
-    
-    k <- 1
-    
-    if (length(strip_both) != length(bg_cols)) {
-        print('Sorry the number of delivired colours is different compared to the number of facetts.')
-        return(g)
-    }
-    
-    for (i in seq_along(strip_both)) {
-        
-        j <- which(grepl('rect', g$grobs[[strip_both[i]]]$grobs[[1]]$childrenOrder))
-        l <- which(grepl('titleGrob', g$grobs[[strip_both[i]]]$grobs[[1]]$childrenOrder))
-        
-        g$grobs[[strip_both[i]]]$grobs[[1]]$children[[j]]$gp$fill <- bg_cols[i]
-        g$grobs[[strip_both[i]]]$grobs[[1]]$children[[l]]$children[[1]]$gp$col <- text_cols[i]
-        k <- k + 1
-    }
-    
-    return(g)
-} 
-
+#' ------------------------------------------------------------------------------
+#' Volcano plots, DESeq2 results
+#' ------------------------------------------------------------------------------
+#' @param results A DESeq2 result object
+#' @return A ggplot2 object
+#' @export
 volcanoPlot <- function(df,
                         FDR = 0.05,
                         facet = NULL,

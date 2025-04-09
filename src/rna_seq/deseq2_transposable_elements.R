@@ -29,6 +29,8 @@ if (!"aging_tes" %in% loadedNamespaces()) {
     devtools::load_all("env/")
 }
 
+aging_tes::load_analysis_env()
+aging_tes::load_rna_seq_env()
 
 if (!dir.exists(rna_seq_deseq_dir)) {
     dir.create(rna_seq_deseq_dir, recursive = TRUE)
@@ -110,7 +112,7 @@ deseq.te.merged <- do.call("rbind",
 deseq.te.merged <- merge(deseq.te.merged, te.annotation, by = 'te_id')
 
 write.table(deseq.te.merged,
-            file = paste0(table_dir, '02_deseq_results_te_instances.csv'), 
+            file = paste0(table_dir, deseq_results_te_csv), 
             col.names = T, 
             row.names = F,
             quote = F,

@@ -10,3 +10,4 @@ LazyData: true
 Depends: R (>= 4.0), DESeq2, ggplot2, gtable, tidyverse, blackRcloud
 Imports: ggrepel, extrafont, pheatmap, cowplot, ComplexHeatmap, GO.db
 Suggests: ggvenn, ggh4x, ggalluvial, VennDiagram, ggrastr, grid
+RoxygenNote: 7.3.2

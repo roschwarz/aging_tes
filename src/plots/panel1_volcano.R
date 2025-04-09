@@ -3,11 +3,10 @@ if (!"aging_tes" %in% loadedNamespaces()) {
     devtools::load_all("env/")
 }
 
-if (!exists("deseq.te.merged")) {
-    
-    deseq.te.merged <- read.csv(paste0(table_dir, '02_deseq_results_te_instances.csv'))
-    
-}
+aging_tes::load_rna_seq_env()
+aging_tes::load_plotting_env()
+
+
 
 # change order of tissues
 deseq.te.merged$tissue <- factor(deseq.te.merged$tissue, 
