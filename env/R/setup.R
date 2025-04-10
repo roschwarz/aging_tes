@@ -21,7 +21,7 @@ suppressPackageStartupMessages({
     library(DESeq2)
     library(blackRcloud)
     library(extrafont)
-   
+    library(data.table)
 })
 
 # ------------------------------------------------------------------------------
@@ -131,6 +131,7 @@ load_plotting_env <- function(){
     
     plot_files <- c("theme_rob.R",
                     "plot_heatmaps.R",
+                    "plot_kimura.R",
                     "plot_volcano.R")
     
     for (f in plot_files){
@@ -156,7 +157,7 @@ load_plotting_env <- function(){
 # ------------------------------------------------------------------------------
 
 #' @export
-load_rna_seq_env <- function(){
+load_rna_seq_env <- function(set = 'te'){
     
     message("→ Loading rna seq env...")
     
@@ -176,6 +177,10 @@ load_rna_seq_env <- function(){
     deseq_dds_gene <<- "dds_genes_salmonTE.Rdata"
     deseq_results_gene <<- "deseq_genes_salmonTE.Rdata"
     deseq_results_gene_csv <<- "02_deseq_results_genes.csv"
+    
+    deseq_dds_mixed <<- "dds_mixed_salmonTE.Rdata"
+    deseq_results_mixed <<- "deseq_mixed_salmonTE.Rdata"
+    deseq_results_mixed_csv <<- "02_deseq_results_mixed.csv"
     
     base_path <- paste0(getwd(), "/env/R/data")
     
