@@ -7,6 +7,9 @@ aging_tes::load_rna_seq_env()
 aging_tes::load_plotting_env()
 
 
+# ------------------------------------------------------------------------------
+# Volcano plots for all TEs and tissues
+# ------------------------------------------------------------------------------
 
 # change order of tissues
 deseq.te.merged$tissue <- factor(deseq.te.merged$tissue, 
@@ -40,3 +43,21 @@ if (requireNamespace("grid", quietly = TRUE)) {
 pl <- grid.draw(volcano.te)
 
 show(pl)
+
+
+# ------------------------------------------------------------------------------
+# Volcano plots separated by age of TEs
+# ------------------------------------------------------------------------------
+
+# young TEs (kimura <= 5)
+
+young_TEs <- deseq.te.merged %>% 
+    filter(Kimura <= 5)
+
+
+# change order of tissues
+young_TEs$tissue <- factor(young_TEs$tissue, 
+                                 levels = c('brain', 'skin', 'blood'))
+
+volcanoPlot(cutPvalue(young_TEs), FDR = 0.05, facet = 'tissue')
+
