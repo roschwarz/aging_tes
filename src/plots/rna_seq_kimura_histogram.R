@@ -1,0 +1,1 @@
+kimHisto(down_detes_skin)
