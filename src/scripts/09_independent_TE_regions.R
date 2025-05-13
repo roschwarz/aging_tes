@@ -62,7 +62,7 @@ quantRanges <- sapply(tissues, simplify = F, function(tissue){
 
 #create and load TE region annotation
 #te.region.file = '../../data/shared/mm10_TE_region_extended.bed'
-# te.region.file = '../../data/shared/mm10_TE_region_5prime_extended.bed'
+#te.region.file = '../../data/shared/mm10_TE_region_5prime_extended.bed'
 # 
 # TE.region <- readGeneric(te.region.file, strand = 6, meta.cols = list(names = 4)) 
 

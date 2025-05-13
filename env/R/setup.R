@@ -37,6 +37,7 @@ create_project_dirs <- function() {
     dirs <- c("data/processed",
               "results/figures",
               "results/tables",
+              "results/te_island",
               "data/shared")
     for (d in dirs) {
         if (!dir.exists(d)) dir.create(d, recursive = TRUE)
@@ -114,138 +115,13 @@ load_annotations <- function(){
 }
 
 
-# ------------------------------------------------------------------------------
-# Plotting Stuff
-# ------------------------------------------------------------------------------
-#' @export
-load_plotting_env <- function(){
-    
-    suppressPackageStartupMessages({
-    library(ComplexHeatmap)
-    library(circlize)
-    library(ggalluvial)
-    })
-    
-    message("→ Loading plotting settings...") 
-    
-    base_path <- paste0(getwd(), "/env/R/plots")
-    
-    plot_files <- c("theme_rob.R",
-                    "plot_heatmaps.R",
-                    "plot_kimura.R",
-                    "plot_volcano.R")
-    
-    for (f in plot_files){
-        source(file.path(base_path, f))
-    }
-    
-    # # set the theme of interest
-    if (exists("theme_rob")) {
-        message("Set standard theme to theme_rob")
-        ggplot2::theme_set(theme_rob(12))
-    } else {
-        warning("theme_rob not found in plotting environment.")
-    }
-    
-}
-
-###################
-# Module Specific #
-###################
-
-# ------------------------------------------------------------------------------
-# RNA-Seq 
-# ------------------------------------------------------------------------------
-
-#' @export
-load_rna_seq_env <- function(){
-    
-    message("→ Loading rna seq env...")
-    
-    # Count tables
-    counts_rna <<- list(brain = "./results/rna_seq/brain/alignment_SalmonTE/EXPR.csv",
-                       skin = "./results/rna_seq/skinII/alignment_SalmonTE/EXPR.csv",
-                       blood = "./results/rna_seq/blood/alignment_SalmonTE/EXPR.csv")
-    
-    # Directories & Files
-    rna_seq_results_dir <<- 'results/rna_seq/'
-    rna_seq_deseq_dir <<- paste0(rna_seq_results_dir, 'deseq2/')
-    
-    deseq_dds_te <<- "dds_TE_instances_salmonTE.Rdata"
-    deseq_results_te <<- "deseq_TE_instances_salmonTE.Rdata"
-    deseq_results_te_csv <<- "02_deseq_results_te_instances.csv"
-    
-    deseq_dds_gene <<- "dds_genes_salmonTE.Rdata"
-    deseq_results_gene <<- "deseq_genes_salmonTE.Rdata"
-    deseq_results_gene_csv <<- "02_deseq_results_genes.csv"
-    
-    deseq_dds_mixed <<- "dds_mixed_salmonTE.Rdata"
-    deseq_results_mixed <<- "deseq_mixed_salmonTE.Rdata"
-    deseq_results_mixed_csv <<- "02_deseq_results_mixed.csv"
-    
-    base_path <- paste0(getwd(), "/env/R/data")
-    
-    rna_files <- c("load_deseq_tes.R")
-    
-    for (f in rna_files){
-        source(file.path(base_path, f))
-    }
-    
-}
 
 
 
 
-# ------------------------------------------------------------------------------
-# CAGE-Seq 
-# ------------------------------------------------------------------------------
-
-#' @export
-load_cage_seq_env <- function(){
-    
-    message("→ Loading  seq env...")
-    
-    # Count tables
-    cage_counts <<- list(
-        brain = 'results/cage_seq_gclipped/brain_downsampled_gclipped/counts/brain_downsampled_peak_counts.csv',
-        blood = 'results/cage_seq_gclipped/blood_gclipped/counts/blood_peak_counts.csv',
-        skin = 'results/cage_seq_gclipped/skinII_gclipped/counts/skinII_peak_counts.csv')    
-    
-    # Directories & Files
-    cage_results_dir <<- 'results/cage_seq_gclipped/'
-    cage_deseq_dir <<- paste0(cage_results_dir, 'deseq2/')
-    
-    if (!dir.exists(cage_deseq_dir)) {
-        dir.create(cage_deseq_dir, recursive = TRUE)
-    }
-    
-    cage_dds <<- paste0(cage_deseq_dir, "dds_cage_segemehl.Rdata")
-    cage_deseq_res <<- paste0(cage_deseq_dir, "deseq_cage_segemehl.Rdata")
-    cage_deseq_res_csv <<- "deseq_cage_all.csv"
-    
-    
-}
 
 
 
-#' @export
-load_cage_peak_annotation <- function(){
-    
-    raw_cage_counts <- list('brain' ='results/cage_seq_gclipped/brain_downsampled_gclipped/raw_peaks/brain_cage_peaks.bed',
-                            'skin' = 'results/cage_seq_gclipped/skinII_gclipped/raw_peaks/skin_cage_peaks.bed',
-                            'blood' = 'results/cage_seq_gclipped/blood_gclipped/raw_peaks/blood_cage_peaks.bed')
-    
-    
-    cageRanges <- sapply(names(raw_cage_counts), simplify = F, function(tissue){
-        
-       
-        file <- raw_cage_counts[[tissue]]
-        if (file.exists(file)){
-            return(readGeneric(file, strand = 6, meta.cols = list(names = 4)))
-        }else{
-            logmsg(paste('Raw cage peak annotation does not exist for', tissue, '. Please check cage_store_annotation.R'))
-        }
-        
-    })
-    
-}
+
+
+

@@ -2,7 +2,6 @@
 # Project specific naming 
 # ------------------------------------------------------------------------------
 
-
 getConditions <- function(file_names) {
     # Project specific. It uses the naming convention of the fastq file to
     # determine the tissue and age of each sample.
@@ -69,8 +68,6 @@ updateHeader <- function(count.matrix){
     for(file in oldHeader){
         newHeader <- paste(getTissue(file), getAge(file), getId(file), sep="_")
         newHeaders = c(newHeaders, newHeader)
-        
-        
     }
     
     names(count.matrix) <- newHeaders
@@ -80,7 +77,6 @@ updateHeader <- function(count.matrix){
 
 
 #======= Get functions ======
-
 
 getTissue <- function(fileName){
     
