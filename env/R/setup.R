@@ -49,6 +49,7 @@ create_project_dirs <- function() {
 # ------------------------------------------------------------------------------
 
 tissues = c("brain", "skin", "blood")
+female_tissues = c("brain", "skin")
 orders.of.interest <- c("LINE", "SINE", "LTR", "DNA")
 chr_of_interest <- paste0("chr", c(1:19, "X", "Y"))
 FDR <- 0.05
@@ -61,7 +62,11 @@ FDR <- 0.05
 tissue.color <- c(background = 'black',
                   brain = '#58B2AA',
                   skin = '#EFA081',
-                  blood = '#685299')
+                  blood = '#685299',
+                  liver = '#adc178',
+                  'Gastrocnemius muscle' = '#a98467',
+                  'White adipose tissue' = '#f0ead2',
+                  male = "red")
 
 tissue.text.color <- c( brain = "#ffffff",
                         skin = "#000000",
