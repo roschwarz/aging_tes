@@ -36,7 +36,7 @@ load_te_ranges <- function(){
 load_te_annotation <- function(){
     if (!file.exists(paste0(common_data, "te.annotation.Rdata"))) {
     
-        te.annotation <- transGrange(teRanges) %>%
+        te.annotation <<- transGrange(teRanges) %>%
             dplyr::rename(te_id = te.id) %>%
             filter(!duplicated(te_id)) %>%
             dplyr::select("te_id", "position", "ensembl_gene_id", "external_gene_name") %>%
@@ -47,7 +47,7 @@ load_te_annotation <- function(){
     
     }else{
     
-        te.annotation <- loadRdata(paste0(common_data, "te.annotation.Rdata"))
+        te.annotation <<- loadRdata(paste0(common_data, "te.annotation.Rdata"))
     
     }
 }
