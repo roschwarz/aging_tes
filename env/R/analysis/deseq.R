@@ -43,7 +43,8 @@ doDEseq <- function(count.matrix,
                     paral=FALSE, 
                     reference = NULL, 
                     target = 'all',
-                    count_threshold = 10){
+                    count_threshold = 10,
+                    relevel_condition = "condition"){
     
     logmsg(paste("Starting DESeq2 for target:", target))
     
@@ -52,7 +53,7 @@ doDEseq <- function(count.matrix,
     }
     
     # order of columns in count matrix needs to be equal to the order of the
-    # col.data table.
+    # col_data table.
     if (!all(rownames(col_data) %in% colnames(count.matrix))) {
         stop("Not all sample names in col_data are found in count matrix column names.")
     }
@@ -75,7 +76,8 @@ doDEseq <- function(count.matrix,
     
     if (!is.null(reference)) {
         logmsg(paste("Setting reference level to:", reference))
-        dds$condition <- relevel(dds$condition, ref = reference)
+        #dds$condition <- relevel(dds$condition, ref = reference)
+        dds[[relevel_condition]] <- relevel(dds[[relevel_condition]], ref = reference)
     }
     
     logmsg("Running DESeq...")
