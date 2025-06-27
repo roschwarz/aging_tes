@@ -11,6 +11,8 @@ aging_tes::load_plotting_env()
 # Volcano plots for all TEs and tissues
 # ------------------------------------------------------------------------------
 
+deseq.te.merged <- fread(paste0(table_dir, deseq_results_te_csv))
+
 # change order of tissues
 deseq.te.merged$tissue <- factor(deseq.te.merged$tissue, 
                                  levels = c('brain', 'skin', 'blood'))
@@ -46,7 +48,7 @@ show(pl)
 
 
 # ------------------------------------------------------------------------------
-# Volcano plots separated by age of TEs
+# Volcano plots separated by age of TEs using Kimura distances
 # ------------------------------------------------------------------------------
 
 # young TEs (kimura <= 5)
@@ -60,4 +62,5 @@ young_TEs$tissue <- factor(young_TEs$tissue,
                                  levels = c('brain', 'skin', 'blood'))
 
 volcanoPlot(cutPvalue(young_TEs), FDR = 0.05, facet = 'tissue')
+
 
