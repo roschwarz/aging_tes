@@ -46,7 +46,8 @@ doDEseq <- function(count.matrix,
                     paral=FALSE, 
                     reference = NULL, 
                     target = 'all',
-                    count_threshold = 10){
+                    count_threshold = 10,
+                    relevel_condition = "condition"){
     
     logmsg(paste("Starting DESeq2 for target:", target))
     
@@ -78,7 +79,9 @@ doDEseq <- function(count.matrix,
     
     if (!is.null(reference)) {
         logmsg(paste("Setting reference level to:", reference))
-        dds$condition <- relevel(dds$condition, ref = reference)
+        #dds$condition <- relevel(dds$condition, ref = reference)
+        dds[[relevel_condition]] <- relevel(dds[[relevel_condition]], ref = reference)
+        
     }
     
     logmsg("Running DESeq...")

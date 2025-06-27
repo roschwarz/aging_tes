@@ -4,3 +4,4 @@ manuscript
 doc
 foo
 .snakemake
+tmp/
