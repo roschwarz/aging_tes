@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 export RIPPCHEN=/misc/paras/data/programs/bashbone/latest/rippchen
-source $RIPPCHEN/activate.sh
+source $RIPPCHEN/activate.sh -l true -c false -r true -a "$@"
 
 ###########
 # Naming  #
@@ -36,7 +36,7 @@ dedup(){
         done
 
     commander::printcmd -a cmds
-    commander::qsubcmd -r -p threads -t 20 -i 10 -n dedub -o $PROCESSED_DATA -a cmds
+    commander::qsubcmd -c bashbone -r -p threads -t 20 -i 10 -n dedub -o $PROCESSED_DATA -a cmds
 }
 #dedup
 
@@ -48,7 +48,6 @@ quality_check_dedup(){
 
 }
 #quality_check_dedup
-#
 
 detector_old(){
 
@@ -70,13 +69,10 @@ detector_old(){
 
 }
 #detector_old
-#
-#
 
 salmon_map(){
 
-    results_dir="../../results/rna_seq/female/"
-
+    results_dir="../../results/rna_seq/female/skin_dup"
     mkdir -p $results_dir
 
     export salmon=/misc/paras/data/rschwarz/programs/salmon.v0.8.2/salmon
@@ -90,4 +86,112 @@ salmon_map(){
         'output_dir=$(basename {1} _R1.fastq.gz); $salmon quant -l A -1 {1} -2 {2} -p 5 -i $index -o $results/${output_dir/}'
 
 }
-salmon_map
+#salmon_map
+
+
+merge_tables(){
+    
+    for tissue in skin; do #, brain; do
+
+        awk '
+        FNR==1 {
+            file_num++
+            if (file_num==1) header="TE"
+            header = header "\t" FILENAME
+            next
+        }
+        {
+            key=$1
+            value=$NF
+            data[key,file_num]=value
+            keys[key]=1
+        }
+        END {
+            print header
+            for (k in keys) {
+                line = k
+                for (i=1; i<=file_num; i++) {
+                    line = line "\t" ( (k,i) in data ? data[k,i] : "NA")
+                }
+                print line
+            }
+        }
+        ' ../../results/rna_seq/female/skin_dup/*/quant.sf > ../../results/rna_seq/female/skin_dup/EXPR.csv # ../../results/rna_seq/female/*${tissue}*/quant.sf > ../../results/rna_seq/female/EXPR_${tissue}.csv
+
+
+    done
+}
+#merge_tables
+
+
+salmonTE_map(){
+
+
+    results_dir="../../results/rna_seq/female/salmonTE/"
+
+    mkdir -p $results_dir
+    declare -a fastqs
+
+	for files in $(ls "$PROCESSED_DATA"*R*.fastq.gz | rev | cut -c 12- | rev | uniq); do
+    		
+	    fastqs+="${files}R1.fastq.gz ${files}R2.fastq.gz "
+	    
+	done
+
+	    cmds=("cd $resultDir/; source ~/programs/conda/bin/activate salmonTE; \
+		/misc/paras/data/rschwarz/programs/SalmonTE/SalmonTE.py quant \
+		    --reference=mm10.TE.transcriptome.v102 \
+		    --outpath=$resultDir \
+		    --num_threads=56 \
+            --exprtype=count \
+    		    $fastqs")
+	
+    commander::printcmd -a cmds
+	commander::qsubcmd -r -p threads -t 56 -i 1 -n sal_"${tissue}" -o "$results_dir" -a cmds
+}
+#salmonTE_map
+
+
+# Map the raw data with the rippchen pipeline from Konstantin
+standard(){
+
+    results_dir="../../results/rna_seq/female/rippchen"
+
+    mkdir -p $results_dir
+    threads=56
+
+    declare -a cmds
+
+    for fi in $(find $RAW_DATA -type f -name "*skin*R1.fastq.gz" | rev | cut -c 13- | rev | uniq); do
+        fastqR1=${fi}_R1.fastq.gz
+        fastqR2=${fi}_R2.fastq.gz
+        fastqR3=${fi}_UMI.fastq.gz
+
+        log=$(basename $fi .fastq).log
+
+        commander::makecmd -a cmds -s '|' -c {COMMANDER[0]}<<- CMD
+            $RIPPCHEN/scripts/rippchen.sh
+                -v 2
+                -t $threads
+                -1 $fastqR1
+                -2 $fastqR2
+                -3 $fastqR3
+                -g /misc/paras/data/genomes/GRCm38_v102/GRCm38.fa
+                -gtf /misc/paras/data/genomes/GRCh38_v102/GRCh38.fa.gtf
+                -a1 AGATCGGAAGAGC -a2 AGATCGGAAGAGC
+                -o $results_dir
+                -l $results_dir/logs/prep/resume_$log
+                -tmp /data/tmp/rschwarz
+                -no-bwa
+                -no-star
+                -no-stats
+                -no-cor
+                -skip md5
+CMD
+        done
+        
+        commander::printcmd -a cmds
+        commander::qsubcmd -r -p threads -t $threads -i 4 -n female -o $results_dir -a cmds
+
+}
+standard
