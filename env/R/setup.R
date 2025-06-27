@@ -23,6 +23,11 @@ suppressPackageStartupMessages({
     library(extrafont)
     library(data.table)
     library(genomation)
+    library(Gviz)
+    library(GenomicRanges)
+    library(plyranges)
+    library(BRGenomics)
+    library(TxDb.Mmusculus.UCSC.mm10.knownGene)
 })
 
 # ------------------------------------------------------------------------------
