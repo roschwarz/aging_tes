@@ -16,7 +16,8 @@ aging_tes::load_annotations()
 aging_tes::load_plotting_env()
 
 cageRanges <- load_cage_peak_annotation()
-
+teRanges <- load_te_ranges()
+te_annotation <- load_te_annotation()
 
 # ------------------------------------------------------------------------------
 # Identify transposable elements with their own TSS
@@ -66,7 +67,7 @@ te_super_enrichment <- do.call('rbind', sapply(names(indie_TEs_list), simplify =
     df <- splitTEID(df, 'te_id')
     df <- blackRcloud::binoRich(
         df,
-        te.annotation,
+        te_annotation,
         c(target = 'super_family', background = 'super_family'),
         FDR.cap = 1e-10
     )
@@ -148,7 +149,7 @@ cage_enrichment_pl
 # Need the figure in 7x8 cm (wxh)
 # 2.8x3.14 in
 ggsave(cage_enrichment_pl,
-       filename = paste0(figure_dir, 'cage_indie_TE_enrichment.pdf'),
+       filename = paste0(figure_dir, 'panel_2_cage_indie_TE_enrichment.pdf'),
        device = cairo_pdf,
        width = 7,
        height = 8,
