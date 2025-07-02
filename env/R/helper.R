@@ -174,6 +174,29 @@ color_strips <- function(pl,
 
 
 # ------------------------------------------------------------------------------
+# TE specific functions...
+# ------------------------------------------------------------------------------
+
+order.TEs <- function(df, col, decreasing = TRUE){
+    # orders the data frame for a certain column by the occurrences of instances per group 
+    # in the column. Is useful for geom_bar where you can order the data frame by decreasing
+    # counts.
+    # Example:
+    # ggplot(order.TEs(TE.cluster.last.instances,'super_family'), aes(super_family)) +
+    #     geom_bar() 
+    
+    df <- within(df,
+                 ordered <- factor(df[[col]], levels = names(sort(table(df[[col]]),
+                                                                  decreasing = decreasing ))))
+    
+    df[[col]] <- df$ordered
+    
+    return(df)
+    
+}
+
+
+# ------------------------------------------------------------------------------
 # featureCount loading...
 # ------------------------------------------------------------------------------
 
