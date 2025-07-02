@@ -28,6 +28,8 @@ suppressPackageStartupMessages({
     library(plyranges)
     library(BRGenomics)
     library(TxDb.Mmusculus.UCSC.mm10.knownGene)
+    library(ComplexHeatmap)
+    library(circlize)
 })
 
 # ------------------------------------------------------------------------------
