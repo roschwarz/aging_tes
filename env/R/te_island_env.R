@@ -4,21 +4,35 @@ load_te_island_env <- function(){
     logmsg("→ Loading te island environment...")
     
     source("src/lib/te_island_nanopore_genomebrowser.R")
+    
+    # ==============================================================================
+    # Directories
+    # ==============================================================================
+    
+    tables_and_co <<- "results/te_island/tables_and_co"
+    
+    if ( !dir.exists(tables_and_co) )
+        dir.create(tables_and_co, recursive = TRUE)
+    
+    # ==============================================================================
     # Annotations
+    # ==============================================================================
     te_island_file_5_prime_extended <<- "data/processed/annotation/mm10_TE_island_5prime_extended.bed"
     brain_intergenic_te_islands <<- read.csv('results/te_island/long_read_verification/dataset_1_PMC10862843/intergenic.teilands.bed',
                                       sep = '\t',
                                       header = FALSE)
     
-    
+    # ==============================================================================
     # TE island annotation tables
+    # ==============================================================================
     indie_te_island_bed <<- list(brain = "./results/te_island/brain_downsampled_indie_te_island.bed",
                                  skin = "./results/te_island/skin_indie_te_island.bed",
                                  blood = "./results/te_island/blood_indie_te_island.bed")
     
-    
+    # ==============================================================================
     # Verification of TE islands by nanopore
     # intergenic TEs in brain
+    # ==============================================================================
     brain_counts <<- read.csv('results/te_island/long_read_verification/dataset_1_PMC10862843/count_brain/quant.sf',
                        sep = '\t')
     
