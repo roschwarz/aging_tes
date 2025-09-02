@@ -1,4 +1,47 @@
 
+
+random_sampling <- function(aln, max_reads, seed = 42){
+    set.seed(seed)
+    aln <- aln[sample(seq_along(aln), min(max_reads, length(aln)))]
+    
+    return(aln)
+}
+
+by_position <- function(aln, max_reads, strand){
+    
+    if (strand == "+") {
+        aln <- aln[order(start(aln), decreasing = FALSE)][1:max_reads]
+    } else {
+        aln <- aln[order(end(aln), decreasing = TRUE)][1:max_reads]
+    }
+    
+    return(aln)
+    
+}
+
+sub_sampling_reads <- function(bam_file, chromosome, start_coord, end_coord, strand, max_reads = 25, sampling_strat = 'by_pos'){
+    
+    which <- GenomicRanges::GRanges(seqnames = chromosome,
+                                    ranges = IRanges::IRanges(start = start_coord, end = end_coord))
+    
+    param <- Rsamtools::ScanBamParam(which = which)
+    
+    aln <- GenomicAlignments::readGAlignments(bam_file, param = param)
+    # Sub sample to avoid plotting too many reads
+    if (length(aln) > max_reads) {
+        if (sampling_strat == 'by_pos') {
+            print("Sampling by position...")
+            aln <- by_position(aln, max_reads, strand = strand)
+        } else {
+            print("Random sampling...")
+            aln <- random_sampling(aln, max_reads)
+        }
+    }
+    
+    return(granges(aln))
+}
+
+
 te_island_track <- function(te_island_id_list,
                             te_island_ranges,
                             te_island_annotation_file){
@@ -45,10 +88,13 @@ local_te_track <- function(te_ranges, chromosome, start_coord, end_coord){
 }
 
 
-nanopore_track <- function(chromosome, bam_file, name = "nanopore reads"){
+nanopore_track <- function(chromosome, start_coord, end_coord, strand, bam_file, max_reads = 25, name = "nanopore reads"){
+
+    
+    readRanges <- sub_sampling_reads(bam_file, chromosome, start_coord, end_coord, strand, max_reads = max_reads)
     
     nanopore_reads <- Gviz::AnnotationTrack(
-        range = bam_file,
+        range = readRanges,
         genome = "mm10",
         name = "reads",
         fill = "lightgray",
@@ -85,6 +131,7 @@ genomeBrowserNanopore <- function(te_island_id,
                                   chromosome,
                                   start_coord, 
                                   end_coord, 
+                                  strand, 
                                   te_island_annotation_file,
                                   bam_file){
     
@@ -92,7 +139,7 @@ genomeBrowserNanopore <- function(te_island_id,
     
     te_island_track <- te_island_track(te_island_id_list = te_island_id, te_island_ranges, te_island_annotation_file)
     te_instance_track <- local_te_track(teRanges, chromosome, start_coord, end_coord) 
-    nanopore_track <- nanopore_track(chromosome, bam_file)
+    nanopore_track <- nanopore_track(chromosome, start_coord, end_coord, strand, bam_file)
     cage_tracks <- cage_seq_tracks(chromosome, start_coord, end_coord)
     
     Gviz::plotTracks(

@@ -18,6 +18,39 @@ aging_tes::load_te_island_env()
 load_te_ranges()
 
 
+# Find interesting candidates by looking at read counts
+counts <- fread("./results/te_island/long_read_verification/dataset_1_PMC10862843/count_brain/quant.sf")
+
+top_20 <- counts %>% 
+    filter(Length > 1500, Name %in% brain_intergenic_te_islands$V4) %>%
+    arrange(desc(TPM)) %>% 
+    head(20)
+
+
+top_20 <- merge(top_20, brain_intergenic_te_islands, by.x = 'Name', by.y = 'V4')
+
+# Make a dia show for the top 20 candidates
+
+for(island in top_20$Name) {
+    print(island)
+    te_island_info <- top_20 %>% filter(Name == island)
+    
+    chromosome = te_island_info$V1
+    start_coord = te_island_info$V2 - 1000
+    end_coord = te_island_info$V3 + 1000
+    strand = te_island_info$V6
+    
+    genomeBrowserNanopore(
+        c(island),
+        chromosome = chromosome,
+        start_coord = start_coord,
+        end_coord = end_coord,
+        strand = strand,
+        te_island_annotation_file = te_island_file_5_prime_extended,
+        bam_file = bam_file_dataset_1
+    )
+}
+
 # Search for TE islands that are covered by Nanopore
 brain_te_islands <- indie_te_island_bed$brain
 
@@ -34,21 +67,42 @@ start_coord = 21558236
 end_coord = 21563700
 
 
+# Top example as the Nanopore read starts exactly at a CAGE-peak
 genomeBrowserNanopore(
     c("TE_Cluster_305170"),
     chromosome = 'chr12',
     start_coord = 21559250,
     end_coord = 21563700,
+    strand = "+",
     te_island_annotation_file = te_island_file_5_prime_extended,
     bam_file = bam_file_dataset_1
 )
 
+# Protocadherin gene cluster example
+genomeBrowserNanopore(
+    c("TE_Cluster_1300406", "TE_Cluster_1300408"),
+    chromosome = 'chr18',
+    start_coord = 60260000,
+    end_coord = 60300000,
+    te_island_annotation_file = te_island_file_5_prime_extended,
+    bam_file = bam_file_dataset_1
+)
+
+## TE_Cluster_918533
+genomeBrowserNanopore(
+    c("TE_Cluster_918533"),
+    chromosome = 'chr2',
+    start_coord = 178037961,
+    end_coord = 178049085,
+    te_island_annotation_file = te_island_file_5_prime_extended,
+    bam_file = bam_file_dataset_1
+)
 
 genomeBrowserNanopore(
     c("TE_Cluster_399728"),
     chromosome = 'chr13',
     start_coord = 49472663,
-    end_coord = 49472663,
+    end_coord = 49477404,
     te_island_annotation_file = te_island_file_5_prime_extended,
     bam_file = bam_file_dataset_1
 )
