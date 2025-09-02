@@ -23,7 +23,9 @@ load_te_island_env <- function(){
                                       header = FALSE)
     
     # ==============================================================================
-    # TE island annotation tables
+    # indie TE island annotation tables
+    # TE islands that overlap with at least one cage peak and where at least on 
+    # transposable element is considered as expressed (p adjusted is not NA)
     # ==============================================================================
     indie_te_island_bed <<- list(brain = "./results/te_island/brain_downsampled_indie_te_island.bed",
                                  skin = "./results/te_island/skin_indie_te_island.bed",

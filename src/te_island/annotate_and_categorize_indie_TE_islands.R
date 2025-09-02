@@ -27,14 +27,13 @@ aging_tes::load_annotations()
 aging_tes::load_te_island_env()
 
 load_te_ranges()
-
-te_island_5_prime_extended <- readGeneric('data/processed/annotation/mm10_TE_island_5prime_extended.bed',
-                                          strand = 6,
-                                          meta.cols = list(names = 4))
+load_te_island_annotation()
+load_gene_ranges()
 
 # Collect TE instances of TE-regions to get information about the composition of the TE
 # regions later in the analysis.
-te_island_instances <- blackRcloud::intersectGranger(te_island_5_prime_extended, teRanges, tab = 'all')
+logmsg("Overlap 5'-extended TE islands with te instances")
+te_island_instances <- blackRcloud::intersectGranger(te_island_5primeRanges, teRanges, tab = 'all')
 
 # TEs can intersect with multiple genes, so that they occur multiple times in
 # the teRange object. Therefore a unique is applied at the end of the pipeline
@@ -51,25 +50,26 @@ names(te_island_instances) <- c("te_island_id", "te_id", "te_position")
 #####################################
 
 # Usage of CAGE- and RNA-seq to get individually expressed TE islands. 
-#  1. Intersect the extended TE islands (te_island_5_prime_extended) with CAGE-peaks to get potential 
+#  1. Intersect the extended TE islands (te_island_5primeRanges) with CAGE-peaks to get potential 
 #     individually expressed TE islands.
 #  2. Get individually expressed TE islands that also contain at least one expressed TE instance that 
 #     is detected via RNA-Seq. An TE instance is considered as expressed when an adjusted p-value after
 #     the DESeq analysis is available.
 
 # Cage intersection
+logmsg("Determine individually TE islands.")
 indie_te_islands <- sapply(names(cageRanges), 
                           simplify = F, 
                           USE.NAMES = T, 
                           function(x){
                               
-                              blackRcloud::intersectGranger(cageRanges[[x]], te_island_5_prime_extended, tab = 'all')
+                              blackRcloud::intersectGranger(cageRanges[[x]], te_island_5primeRanges, tab = 'all')
                               
                           })
 
 # RNA intersection
 load_deseq_results() # loads rna_deseq_res_te
-
+logmsg("Determine individually expressed TE islands.")
 expressed_te_islands <- sapply(names(rna_deseq_res_te), simplify = F, function(x){
     
     expressed_TEs_rna <- rownames(rna_deseq_res_te[[x]]  %>% filter(!is.na(padj)))
@@ -98,6 +98,7 @@ indie_te_islands <- sapply(names(indie_te_islands), simplify = F, function(x){
 
 
 ## Write bed-files of individually expressed TE islands
+logmsg('Write .bed-files of individually expressed TE islands.')
 sapply(names(indie_te_islands), function(x){
     
     df <- indie_te_islands[[x]]
@@ -115,7 +116,7 @@ sapply(names(indie_te_islands), function(x){
     bed_file <- bed_file[c('seqnames', 'start', 'end', 'te_island_id',  'value', 'strand')]
     
     filename = indie_te_island_bed[[x]]
-    
+    logmsg(filename)
     write.table(bed_file, file = filename, sep = '\t', col.names = F, row.names = F, quote = F)
     
 })
@@ -131,7 +132,7 @@ sapply(names(indie_te_islands), function(x){
 # double (consists of two instances) and multiple (consists of more than 2 instances).
 #
 # ==============================================================================
-
+logmsg('Determine the composition of the individually expressed TE islands')
 indie_te_islands_composition <- sapply(names(indie_te_islands), simplify = F, function(x){
     
     indie_te_islands_instances <- te_island_instances %>% 
@@ -186,5 +187,51 @@ indie_te_island_super_family_composition <- sapply(names(indie_te_islands_compos
 indie_te_island_categorized <- list("instance" = indie_te_islands_composition,
                                  "super_fam" = indie_te_island_super_family_composition)
 
+logmsg(paste0("Store the categorized individually expressed TE islands (", tables_and_co,"indie_te_island_categorized.Rdata)"))
 save(indie_te_island_categorized,
      file = paste0(tables_and_co, "indie_te_island_categorized.Rdata"))
+
+
+# ======================================================================
+# TE island gene association 
+# ======================================================================
+
+logmsg('Overlap gene annotation with 5 prime extended te islands.')
+
+te_islands_genes_df <- intersectGranger(geneRanges, te_island_5primeRanges, 'all') %>% 
+    dplyr::select(query.ensembl_gene_id, query.external_gene_name, subject.names) %>% 
+    dplyr::rename(ensembl_gene_id = query.ensembl_gene_id, 
+                  external_gene_name = query.external_gene_name, 
+                  te_island_id = subject.names) 
+
+logmsg(paste0("load DESeq table for te island:", table_dir, "02_deseq_results_te_island.csv"))
+deseq_results <- data.table::fread(paste0(table_dir, "02_deseq_results_te_island.csv"))
+
+logmsg("Categorization of TE islands with respect to gene localization.")
+deseq_results_extended <- merge(deseq_results, te_islands_genes_df, by = 'te_island_id', all.x = TRUE) %>% 
+    mutate(gene_association = case_when(is.na(ensembl_gene_id) ~ 'intergenic', .default = 'intragenic'))
+
+logmsg("Categorization of TE islands with to individual expression.")
+# Combine all indie_te tables in one DataFrame, with tissue-Info
+df_all_indie <- imap_dfr(indie_te_islands, ~ mutate(.x, tissue = .y)) %>% 
+    dplyr::select(subject.names, tissue) %>% 
+    dplyr::rename(te_island_id = subject.names) %>% 
+    mutate(individually = TRUE)
+
+deseq_results_extended <- deseq_results_extended %>% 
+    left_join(df_all_indie, by = c("te_island_id", 'tissue')) %>% 
+    mutate(individually = replace_na(individually, FALSE))
+
+logmsg(paste0("load DESeq table for genes:", table_dir, "02_deseq_results_genes.csv"))
+deseq_results_genes <- data.table::fread(paste0(table_dir, "02_deseq_results_genes.csv")) %>% 
+    #distinct(tissue, ensembl_gene_id, baseMean, log2FoldChange, padj, tissue, gene_biotype ) %>% 
+    dplyr::select(tissue, ensembl_gene_id, baseMean, log2FoldChange, padj, tissue, gene_biotype ) %>% 
+    dplyr::rename(gene_baseMean = baseMean,
+                  gene_log2FoldChange = log2FoldChange,
+                  gene_padj = padj)
+
+deseq_results_extended <- deseq_results_extended %>% 
+    left_join(deseq_results_genes, by = c("ensembl_gene_id", 'tissue'))
+
+write.csv(deseq_results_extended,
+          file = paste0(table_dir, "02_deseq_results_te_island_extended.csv"))

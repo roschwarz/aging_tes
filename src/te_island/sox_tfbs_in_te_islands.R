@@ -357,6 +357,15 @@ pl_with_inset <- ggdraw() +
     draw_plot(pl_length_count) +
     draw_plot(pl_family_count, x = 0.25, y = .13, width = .5, height = 0.86)
 
+ggsave(filename = paste0(figure_dir, 'panel_3_length_of_sox_intersecting_tes_w_inset.pdf'),
+       device = cairo_pdf,
+       plot = pl_with_inset,
+       width = 20,
+       height = 9,
+       units = 'cm',
+       dpi = 300)
+
+
 # ==============================================================================
 # ================================ Blood =======================================
 # ==============================================================================

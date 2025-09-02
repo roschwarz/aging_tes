@@ -146,7 +146,7 @@ count_peak_reads(){
 }
 
 echo Call peaks with peakachu and merge called peaks that are within "$SIZE"
-callPeaks "$OUTPUTROOT"
+#callPeaks "$OUTPUTROOT"
 #merge_narrowPeaks "$OUTPUTROOT" "$SIZE"
 #create_peak_gtf "$OUTPUTROOT"
-#count_peak_reads $OUTPUTROOT
+count_peak_reads $OUTPUTROOT

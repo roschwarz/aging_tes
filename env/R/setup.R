@@ -21,8 +21,12 @@ suppressPackageStartupMessages({
     library(DESeq2)
     library(blackRcloud)
     library(extrafont)
+    library(ggrastr)
     library(data.table)
+    library(ggrepel)
     library(genomation)
+    library(ggpmisc)
+    library(ggpubr)
     library(Gviz)
     library(GenomicRanges)
     library(plyranges)
@@ -33,6 +37,7 @@ suppressPackageStartupMessages({
     library(cowplot)
 })
 
+options(scipen = 999) # prevent to switching to scientific notation like 1e+06
 # ------------------------------------------------------------------------------
 # Paths
 # ------------------------------------------------------------------------------
@@ -75,6 +80,10 @@ tissue.color <- c(background = 'black',
                   'Gastrocnemius muscle' = '#a98467',
                   'White adipose tissue' = '#f0ead2',
                   male = "red")
+
+position_color <- c(intronic = '#15616d',
+                    intergenic = '#ffecd1',
+                    exonic = '#ff7d00')
 
 tissue.text.color <- c( brain = "#ffffff",
                         skin = "#000000",
