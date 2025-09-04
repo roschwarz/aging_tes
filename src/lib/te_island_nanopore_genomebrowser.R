@@ -62,13 +62,13 @@ te_island_track <- function(te_island_id_list,
 }
 
 
-local_te_track <- function(te_ranges, chromosome, start_coord, end_coord){
-    # Subset to TEs in the region of interest
+local_te_track <- function(te_ranges, te){
     
+    # Subset to TEs in the region of interest
     local_tes = data.frame(te_ranges) %>% 
-        filter(seqnames == chromosome, 
-               strand == strand,
-               dplyr::between(start, start_coord, end_coord)) %>% 
+        filter(seqnames == as.character(seqnames(te)), 
+               strand == as.character(strand(te)),
+               dplyr::between(start, start(te), end(te))) %>% 
         blackRcloud::splitTEID("te.id") %>% 
         unique()
         
@@ -89,28 +89,32 @@ local_te_track <- function(te_ranges, chromosome, start_coord, end_coord){
 }
 
 
-nanopore_track <- function(chromosome, start_coord, end_coord, strand, bam_file, max_reads = 25, name = "nanopore reads"){
+nanopore_track <- function(te, bam_file, max_reads = 25, name = "nanopore reads"){
 
     
-    readRanges <- sub_sampling_reads(bam_file, chromosome, start_coord, end_coord, strand, max_reads = max_reads)
+    readRanges <- sub_sampling_reads(bam_file, 
+                                     as.character(seqnames(te)), 
+                                     start(te), 
+                                     end(te),
+                                     as.character(strand(te)), max_reads = max_reads)
     
     nanopore_reads <- Gviz::AnnotationTrack(
         range = readRanges,
         genome = "mm10",
         name = "reads",
         fill = "lightgray",
-        chromosome = chromosome,
+        chromosome = as.character(seqnames(te)),
         id = c()
     )
     
 }
 
 
-cage_seq_tracks <- function(chromosome, start_coord, end_coord){
+cage_seq_tracks <- function(te){
     
     bw <- rtracklayer::import.bw(cage_fwd_bw) %>%
         plyranges::filter_by_overlaps(as(paste0(
-            chromosome, ':', start_coord, '-', end_coord
+            as.character(seqnames(te)), ':', start(te), '-', end(te)
         ), "GRanges"))
     
     
@@ -129,18 +133,15 @@ cage_seq_tracks <- function(chromosome, start_coord, end_coord){
 }
 
 genomeBrowserNanopore <- function(te_island_id, 
-                                  chromosome,
-                                  start_coord, 
-                                  end_coord, 
-                                  strand, 
+                                  te, 
                                   te_island_annotation_file,
                                   bam_file){
     
     gtrack <- GenomeAxisTrack()
     te_island_track <- te_island_track(te_island_id_list = te_island_id, te_island_ranges, te_island_annotation_file)
-    te_instance_track <- local_te_track(teRanges, chromosome, start_coord, end_coord) 
-    nanopore_track <- nanopore_track(chromosome, start_coord, end_coord, strand, bam_file)
-    cage_tracks <- cage_seq_tracks(chromosome, start_coord, end_coord)
+    te_instance_track <- local_te_track(teRanges, te) #chromosome, start_coord, end_coord) 
+    nanopore_track <- nanopore_track(te, bam_file) #start_coord, end_coord, strand, bam_file)
+    cage_tracks <- cage_seq_tracks(te) #chromosome, start_coord, end_coord)
     
     Gviz::plotTracks(
         list(

@@ -37,27 +37,36 @@ for (island in top_20$Name) {
     print(island)
     te_island_info <- top_20 %>% filter(Name == island)
     
-    chromosome = te_island_info$V1
-    start_coord = te_island_info$V2 - 1000
-    end_coord = te_island_info$V3 + 1000
-    strand = te_island_info$V6
+    # make a te island object with chromosome, start, end, strand
+    # You can access the information in the Grange object like this:
+    # start(te_island)[1], end(te_island)[1], seqnames(te_island)[1], strand(te_island)[1]
+    # You use [1] when you have multiple ranges in the GRanges object and want to access the first one
+    # You can also get access to metadata columns like this: mcols(te_island)$column_name
+    te_island = GRanges(
+        seqnames = te_island_info$V1,
+        ranges = IRanges(start = te_island_info$V2 - 1000, end = te_island_info$V3 + 1000),
+        strand = te_island_info$V6
+    )
+    
+    
     
     outfile <- paste0("results/te_island/long_read_verification/genome_browser_shots/", island, ".png")
     
     png(outfile, width = 10, height = 6, units = "in", res = 300)
         genomeBrowserNanopore(
             c(island),
-            chromosome = chromosome,
-            start_coord = start_coord,
-            end_coord = end_coord,
-            strand = strand,
+            te = te_island,
+           # chromosome = chromosome,
+           # start_coord = start_coord,
+           # end_coord = end_coord,
+           # strand = strand,
             te_island_annotation_file = te_island_file_5_prime_extended,
             bam_file = bam_file_dataset_1
         )
     dev.off()
 }
 
-# Search for TE islands that are covered by Nanopore
+#Search for TE islands that are covered by Nanopore
 brain_te_islands <- indie_te_island_bed$brain
 
 brain_counts <- merge(brain_counts, brain_intergenic_te_islands, by.x = 'Name', by.y = 'V4')
