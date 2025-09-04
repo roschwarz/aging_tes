@@ -21,6 +21,7 @@ load_te_ranges()
 # Find interesting candidates by looking at read counts
 counts <- fread("./results/te_island/long_read_verification/dataset_1_PMC10862843/count_brain/quant.sf")
 
+# Select top 20 candidates that are longer than 1500 bp
 top_20 <- counts %>% 
     filter(Length > 1500, Name %in% brain_intergenic_te_islands$V4) %>%
     arrange(desc(TPM)) %>% 
@@ -29,9 +30,10 @@ top_20 <- counts %>%
 
 top_20 <- merge(top_20, brain_intergenic_te_islands, by.x = 'Name', by.y = 'V4')
 
-# Make a dia show for the top 20 candidates
+# Iterate over top 20 candidates and create genome browser shots and store them in 
+# results/te_island/long_read_verification/genome_browser_shots
 
-for(island in top_20$Name) {
+for (island in top_20$Name) {
     print(island)
     te_island_info <- top_20 %>% filter(Name == island)
     
@@ -40,15 +42,19 @@ for(island in top_20$Name) {
     end_coord = te_island_info$V3 + 1000
     strand = te_island_info$V6
     
-    genomeBrowserNanopore(
-        c(island),
-        chromosome = chromosome,
-        start_coord = start_coord,
-        end_coord = end_coord,
-        strand = strand,
-        te_island_annotation_file = te_island_file_5_prime_extended,
-        bam_file = bam_file_dataset_1
-    )
+    outfile <- paste0("results/te_island/long_read_verification/genome_browser_shots/", island, ".png")
+    
+    png(outfile, width = 10, height = 6, units = "in", res = 300)
+        genomeBrowserNanopore(
+            c(island),
+            chromosome = chromosome,
+            start_coord = start_coord,
+            end_coord = end_coord,
+            strand = strand,
+            te_island_annotation_file = te_island_file_5_prime_extended,
+            bam_file = bam_file_dataset_1
+        )
+    dev.off()
 }
 
 # Search for TE islands that are covered by Nanopore

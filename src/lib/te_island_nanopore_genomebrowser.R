@@ -63,6 +63,7 @@ te_island_track <- function(te_island_id_list,
 
 
 local_te_track <- function(te_ranges, chromosome, start_coord, end_coord){
+    # Subset to TEs in the region of interest
     
     local_tes = data.frame(te_ranges) %>% 
         filter(seqnames == chromosome, 
@@ -71,15 +72,15 @@ local_te_track <- function(te_ranges, chromosome, start_coord, end_coord){
         blackRcloud::splitTEID("te.id") %>% 
         unique()
         
-        #pull(te.id) %>% 
-        # unique()
+    ranges_of_interest <- te_ranges[te_ranges@elementMetadata$te.id %in% local_tes$te.id & !duplicated(te_ranges@elementMetadata$te.id)]
+    ids_of_ranges_of_interest <- ranges_of_interest %>% 
+            as.data.frame() %>% 
+            blackRcloud::splitTEID("te.id") %>%
+            dplyr::pull(super_family)
     
-    #te_ids <- blackRcloud::splitTEID()
-    
-    te_instance_track <- AnnotationTrack(te_ranges[te_ranges@elementMetadata$te.id %in% local_tes$te.id & !duplicated(te_ranges@elementMetadata$te.id)],
+    te_instance_track <- AnnotationTrack(ranges_of_interest,
                                   featureAnnotation = "id",
-                                  #fontcolor.item = "white",
-                                  id = local_tes$super_family,
+                                  id = ids_of_ranges_of_interest,
                                   stacking = "dense",
                                   col = 'white',
                                   size = 2)
@@ -136,7 +137,6 @@ genomeBrowserNanopore <- function(te_island_id,
                                   bam_file){
     
     gtrack <- GenomeAxisTrack()
-    
     te_island_track <- te_island_track(te_island_id_list = te_island_id, te_island_ranges, te_island_annotation_file)
     te_instance_track <- local_te_track(teRanges, chromosome, start_coord, end_coord) 
     nanopore_track <- nanopore_track(chromosome, start_coord, end_coord, strand, bam_file)
@@ -163,4 +163,5 @@ genomeBrowserNanopore <- function(te_island_id,
         background.title = "white",
         fontcolor.legend = "black"
     )
+    
 }
