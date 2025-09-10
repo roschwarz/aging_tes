@@ -41,5 +41,6 @@ load_te_island_env <- function(){
     bam_file_dataset_1 <<- 'results/te_island/long_read_verification/dataset_1_PMC10862843/SRR24578270.bam'
     
     cage_fwd_bw <<- 'results/te_island/brain_forward.bw'
+    cage_rev_bw <<- 'results/te_island/brain_reverse.bw'
     cage_old_rev_bw <<- '/misc/paras/data/www/robert/mCQuaRna/cage/mm10/brain.old.reverse.bw'
 }
