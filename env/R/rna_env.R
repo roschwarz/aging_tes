@@ -104,7 +104,7 @@ load_rna_seq_female_env <- function(){
     
     base_path <- paste0(getwd(), "/env/R/data")
     
-    rna_files <- c("rna_seq_load_deseq_tes.R")
+    rna_files <- c("rna_seq_load_deseq_tes.R", "annotations.R")
     
     for (f in rna_files){
         source(file.path(base_path, f))
