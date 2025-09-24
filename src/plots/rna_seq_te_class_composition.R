@@ -7,10 +7,13 @@ aging_tes::load_plotting_env()
 aging_tes::load_rna_seq_env()
 aging_tes::load_annotations()
 
+load_te_ranges()
+
 
 # ------------------------------------------------------------------------------
 # Step 1: Calculate the proportion of TE classes for all TEs (background)
 # ------------------------------------------------------------------------------
+deseq.te.merged <- fread(paste0(table_dir, deseq_results_te_csv))
 
 expressed.tes <- deseq.te.merged %>% 
     filter(!is.na(padj)) %>% 
@@ -122,12 +125,29 @@ pl.te.percent.updated <- ggplot(df.class.updated, aes(x, percent, fill = order))
           legend.key.size = unit(0.5,"line"),
     )
 
-ggsave(pl.te.percent.updated,
-       filename = paste0(figure_dir, 'panel_1_expr_te_class_updated_4x3_300.pdf'),
-       device = cairo_pdf,
-       width = 9.2,
-       height = 7.5,
-       units = "cm",
-       dpi = 300
+# Save figure with metadata to index
+meta <- list(name = 'percentage_expr_te_class',
+             description = 'Proportion of TE classes among expressed or differentially expressed TE instances compared to the background',
+             tags = c('expression', 'rna-seq'),
+             parameters = list(FDR = 0.05, tissues = c('brain', 'skin', 'blood')),
+             script = 'rna_seq_te_class_composition.R'
 )
+
+fig_index(plot = pl.te.percent.updated,
+          outdir = figure_dir,
+          meta = meta,
+          index_file = 'figure_index.tsv',
+          width = 9.2,
+          height = 7.5,
+          dpi = 300,
+          format = 'pdf')
+
+#ggsave(pl.te.percent.updated,
+#       filename = paste0(figure_dir, 'panel_1_expr_te_class_updated_4x3_300.pdf'),
+#       device = cairo_pdf,
+#       width = 9.2,
+#       height = 7.5,
+#       units = "cm",
+#       dpi = 300
+#)
 
