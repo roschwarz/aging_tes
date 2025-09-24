@@ -41,7 +41,7 @@ load_rna_seq_env <- function(){
 # RNA-Seq female
 # ------------------------------------------------------------------------------
 #' @export
-load_rna_seq_female_env <- function(){
+load_rna_seq_female_old_env <- function(){
     
     logmsg("→ Loading rna seq env...")
     
@@ -75,7 +75,42 @@ load_rna_seq_female_env <- function(){
     
 }
 
-
+# ------------------------------------------------------------------------------
+# RNA-Seq female
+# ------------------------------------------------------------------------------
+#' @export
+load_rna_seq_female_env <- function(){
+    
+    logmsg("→ Loading rna seq env...")
+    
+    # Count tables
+    counts_rna <<- "/misc/pichu/data/rschwarz/results/female/detector/EXPRs.csv"
+    
+    # Directories & Files
+    rna_seq_results_dir <<- 'results/rna_seq/female_second/'
+    rna_seq_deseq_dir <<- paste0(rna_seq_results_dir, 'deseq2/')
+    
+    deseq_dds_te <<- "dds_TE_instances_salmonTE.Rdata"
+    deseq_results_te <<- "deseq_TE_instances_salmonTE.Rdata"
+    deseq_results_te_csv <<- "02_deseq_results_te_female_second_instances.csv"
+    
+    deseq_dds_gene <<- "dds_genes_salmonTE.Rdata"
+    deseq_results_gene <<- "deseq_genes_salmonTE.Rdata"
+    deseq_results_gene_csv <<- "02_deseq_results_female_genes.csv"
+    
+    deseq_dds_mixed <<- "dds_mixed_salmonTE.Rdata"
+    deseq_results_mixed <<- "deseq_mixed_salmonTE.Rdata"
+    deseq_results_mixed_csv <<- "02_deseq_results_female_mixed.csv"
+    
+    base_path <- paste0(getwd(), "/env/R/data")
+    
+    rna_files <- c("rna_seq_load_deseq_tes.R")
+    
+    for (f in rna_files){
+        source(file.path(base_path, f))
+    }
+    
+}
 # ------------------------------------------------------------------------------
 # RNA-Seq public data set
 # ------------------------------------------------------------------------------
