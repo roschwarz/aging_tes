@@ -15,9 +15,9 @@ aging_tes::load_cage_seq_env()
 aging_tes::load_annotations()
 aging_tes::load_plotting_env()
 
-cageRanges <- load_cage_peak_annotation()
-teRanges <- load_te_ranges()
-te_annotation <- load_te_annotation()
+load_cage_peak_annotation()
+load_te_ranges()
+load_te_annotation()
 
 # ------------------------------------------------------------------------------
 # Identify transposable elements with their own TSS
@@ -25,34 +25,13 @@ te_annotation <- load_te_annotation()
 
 te_cages <- sapply(names(cageRanges), simplify = F, function(x) {
     
-    df <- intersectGranger(cageRanges[[x]], teRanges, 'all')
-    
-    names(df) <- str_replace_all(names(df), c('query' = 'cage',
-                                              'subject' = 'te')) #makes te.te.id, is a bit annoying
+    df <- process_overlapping(
+        query = teRanges,
+        subject = cageRanges[[x]],
+        col_query_to_subj = "te.id"
+    )
     
     return(df)
-    
-})
-
-cage_TEs <- do.call('rbind', sapply(names(te_cages), simplify = F, function(x){
-    
-    te_cages[[x]] %>% 
-        dplyr::select('te.te.id', 'cage.names') %>% 
-        splitTEID("te.te.id") %>% 
-        #filter(order %in% orders.of.interest) %>% 
-        mutate(tissue = x) %>% 
-        dplyr::rename(te_id = te.te.id,
-                      peak_id = cage.names)
-    
-}))
-
-
-indie_TEs_list <- sapply(c('brain', 'skin', 'blood'), function(x){
-    
-    cage_TEs %>% 
-        filter(tissue == x) %>% 
-        pull(te_id) %>% 
-        unique()
     
 })
 
@@ -61,8 +40,8 @@ indie_TEs_list <- sapply(c('brain', 'skin', 'blood'), function(x){
 # ------------------------------------------------------------------------------
 
 
-te_super_enrichment <- do.call('rbind', sapply(names(indie_TEs_list), simplify = F, function(x) {
-    df <- data.frame(te_id = unique(indie_TEs_list[[x]]),
+te_super_enrichment <- do.call('rbind', sapply(names(te_cages), simplify = F, function(x) {
+    df <- data.frame(te_id = names(unique(te_cages[[x]]$query_with_hit)),
                      row.names = NULL)
     df <- splitTEID(df, 'te_id')
     df <- blackRcloud::binoRich(
@@ -145,15 +124,19 @@ cage_enrichment_pl <- ggplot(te_super_enrichment, aes(ratio, category, size = lo
 
 cage_enrichment_pl
 
-
-# Need the figure in 7x8 cm (wxh)
-# 2.8x3.14 in
-ggsave(cage_enrichment_pl,
-       filename = paste0(figure_dir, 'panel_2_cage_indie_TE_enrichment.pdf'),
-       device = cairo_pdf,
-       width = 7,
-       height = 8,
-       units = "cm",
-       dpi = 300
+# Save figure with metadata to index
+meta <- list(name = 'cage_TE_enrichment',
+             description = 'Enrichment of CAGE peaks within transposable element superfamilies in brain, skin and blood',
+             tags = c('CAGE-Seq', 'TEs', 'Enrichment'),
+             parameters = list(n_fam_count= ">10", tissues = c('brain', 'skin', 'blood')),
+             script = 'cage_indie_TE_enrichment_plot.R'
 )
 
+fig_index(plot = cage_enrichment_pl,
+          outdir = figure_dir,
+          meta = meta,
+          index_file = 'figure_index.tsv',
+          width = 7,
+          height = 8,
+          dpi = 300,
+          format = 'pdf')
