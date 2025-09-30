@@ -372,3 +372,104 @@ fig_index <- function(plot, outdir, meta, index_file = 'index.tsv', width = 6, h
     
     
 }
+
+
+#' Generic function to find overlaps between two sets of genomic ranges
+#' and summarize the results.
+#' @param query_ranges GRanges object representing the query features (e.g., gene TSSs)
+#' @param subject_ranges GRanges object representing the subject features (e.g., TEs)
+#' @param id_col Optional string specifying the column name in mcols(query_ranges) that uniquely identifies the entity (e.g., gene ID). If NULL, all distinct query features are considered.
+#' @param extend_bp Integer specifying the number of base pairs to extend the query ranges on both sides (default is 0, meaning no extension).
+#' @param verbose Logical indicating whether to print summary statistics (default is TRUE).
+#' @return A list containing:
+#'   - query_with_hit: GRanges of query features that have overlaps
+#'   - subject_hits: GRanges of subject features that overlap with the query
+#'   - stats: A list with total number of query features, number of unique entities with hits, and percentage with hits.
+#' @examples
+#' # Example usage:
+#' results <- process_overlapping(query_ranges = gene_tss_gr, subject_ranges = teRanges, id_col = "ensembl_gene_id", extend_bp = 200)
+#' @note
+#' # This function requires the GenomicRanges package.
+#' 
+#' subject_ranges <- GRanges(seqnames = rep("chr1", 3),
+#'                           ranges = IRanges(start = c(1,11,21), end = c(10,20, 30)),
+#'                           strand = c("+", "+", "+"),
+#'                           gene_id = paste0("gene", 1:3),
+#'                           score = 1:3)
+#' query_ranges <- GRanges(seqnames = rep("chr1", 3),
+#'                         ranges = IRanges(1:3, width=1),
+#'                         strand = c("+", "+", "+"),
+#'                         gene_id = paste0("gene", 1:3),
+#'                         score = 1:3)
+#'
+#' process_overlapping(query_ranges, subject_ranges) 
+#' This returns that 100 % of the query features overlap with the subject features. Because all three TSS (
+#' query_ranges) overlap with the subject ranges.
+#' 
+#' #' process_overlapping(subject_ranges, query_ranges)
+#' This returns that 33.33 % of the query features overlap with the subject features. Because only one of the 
+#' three subject ranges (subject_ranges) overlap with the query ranges. 
+#' @export
+process_overlapping <- function(
+        query_ranges,         # Ranges to search for overlaps (e.g., gene TSSs)
+        subject_ranges,       # Ranges to overlap against (e.g., TEs)
+        id_col = NULL,        # Name of the column in mcols(query_ranges) that uniquely identifies the entity (optional)
+        extend_bp = 0,        # Window size to extend query_ranges (in bp, optional)
+        col_query_to_subj = NULL,  # Metadata columns to transfer from subject (character vector)
+        verbose = TRUE        # If TRUE, prints results
+) {
+    # Optionally extend query ranges
+    if (extend_bp > 0) {
+        query_ranges <- resize(query_ranges, width = extend_bp * 2 + 1, fix = "center")
+    }
+    # Perform overlap
+    hits <- findOverlaps(query_ranges, subject_ranges)
+    
+    if (length(hits) == 0) {
+        warning("No overlaps found.")
+        return(NULL)
+    }
+    
+    
+    overlapped_query <- query_ranges[queryHits(hits)]
+    overlapped_subject <- subject_ranges[subjectHits(hits)]
+    
+    if (!is.null(col_query_to_subj)) {
+        mcols(overlapped_subject)[col_query_to_subj] <- mcols(overlapped_query)[col_query_to_subj]
+    }
+    # Identifier logic: Use id_col if provided
+    if (!is.null(id_col)) {
+        # Check existence
+        if (!(id_col %in% names(mcols(query_ranges)))) {
+            stop(sprintf("Identifier column '%s' not found in query_ranges.", id_col))
+        }
+        unique_entities <- unique(mcols(overlapped_query)[[id_col]])
+    } else {
+        # Fall back to all distinct queries
+        unique_entities <- unique(queryHits(hits))
+    }
+    n_query_total <- length(query_ranges)
+    n_entities_with_hit <- length(unique_entities)
+    pct_with_hit <- 100 * n_entities_with_hit / n_query_total
+    
+    # Print summary if verbose
+    if (verbose) {
+        cat(sprintf("Total query features: %d\n", n_query_total))
+        cat(sprintf("Unique query entities overlapping: %d (%.2f%%)\n",
+                    n_entities_with_hit, pct_with_hit))
+        cat(sprintf("Window size: ±%d bp\n", extend_bp))
+    }
+    
+    # Output
+    results <- list(
+        query_with_hit = overlapped_query,
+        subject_hits = overlapped_subject,
+        stats = list(
+            n_query_total = n_query_total,
+            n_entities_with_hit = n_entities_with_hit,
+            pct_with_hit = pct_with_hit
+        )
+    )
+    return(results)
+}
+

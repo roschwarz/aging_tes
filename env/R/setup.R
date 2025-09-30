@@ -35,6 +35,8 @@ suppressPackageStartupMessages({
     library(ComplexHeatmap)
     library(circlize)
     library(cowplot)
+    library(biomaRt)
+    library(gt)
 })
 
 options(scipen = 999) # prevent to switching to scientific notation like 1e+06
