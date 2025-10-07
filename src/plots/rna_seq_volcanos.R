@@ -8,7 +8,7 @@ aging_tes::load_plotting_env()
 
 
 # ------------------------------------------------------------------------------
-# Volcano plots for all TEs and tissues
+# Volcano plots for all TEs and tissues in male
 # ------------------------------------------------------------------------------
 
 deseq.te.merged <- fread(paste0(table_dir, deseq_results_te_csv))
@@ -129,3 +129,68 @@ ggsave(plot = volcano.old,
 )
 
 
+if (!"aging_tes" %in% loadedNamespaces()) {
+    devtools::load_all("env/")
+}
+
+aging_tes::load_rna_seq_env()
+aging_tes::load_plotting_env()
+
+
+# ------------------------------------------------------------------------------
+# Volcano plots for all TEs and tissues in male and female
+# ------------------------------------------------------------------------------
+
+deseq_te_merged_male <- fread(paste0(table_dir, deseq_results_te_csv_male)) %>% 
+    mutate(sex = 'male',
+           sex_tissue = paste0(sex, "_",tissue))
+
+deseq_te_merged_female <- fread(paste0(table_dir, deseq_results_te_csv_female)) %>% 
+    mutate(sex = 'female',
+           sex_tissue = paste0(sex, "_", tissue))
+
+deseq_tes <- rbind(deseq_te_merged_male, deseq_te_merged_female)
+
+
+# === Collect some Numbers ===
+
+deseq_tes %>% filter(!is.na(padj)) %>% group_by(tissue, sex) %>% summarize(count = n())
+deseq_tes %>% filter(!is.na(padj)) %>% group_by(sex) %>% summarize(count = n())
+deseq_tes %>% filter(padj <= FDR) %>% group_by(sex, tissue) %>% summarize(count = n())
+
+
+# change order of tissues
+deseq_tes$sex_tissue <- factor(deseq_tes$sex_tissue, 
+                                 levels = c('male_brain', 'male_skin', 'male_blood', 'female_brain', 'female_skin'))
+
+volcano_te <- volcanoPlot(cutPvalue(deseq_tes), FDR = 0.05, "sex_tissue") +
+    theme_rob(base_size = 10, base_family = 'arial') +
+    theme(legend.position = 'None')
+
+tissue_sex_colors = c(male_brain = "#58B2AA",
+                      male_skin = "#EFA081",
+                      male_blood = "#685299",
+                      female_brain = "#58B2AA",
+                      female_skin = "#EFA081")
+
+volcano_te <- color_strips(volcano_te, 
+                           bg_cols = tissue_sex_colors, 
+                           text_cols = c( "#ffffff", "#000000","#ffffff", "#ffffff", "#000000"))
+
+
+# Save figure with metadata to index
+meta <- list(name = 'te_instances_volcano_both_sexes',
+             description = 'Volcano plot of all expressed transposable elements in male and female brain, skin and blood',
+             tags = c('expression', 'rna-seq', 'TE'),
+             parameters = list(FDR = 0.05, tissues = c('brain', 'skin', 'blood'), sex = c('male', 'female')),
+             script = 'rna_seq_volcanoR'
+)
+
+fig_index(plot = volcano_te,
+          outdir = figure_dir,
+          meta = meta,
+          index_file = 'figure_index.tsv',
+          width = 17.5,
+          height = 5.5,
+          dpi = 300,
+          format = 'pdf')

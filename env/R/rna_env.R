@@ -18,6 +18,8 @@ load_rna_seq_env <- function(){
     deseq_dds_te <<- "dds_TE_instances_salmonTE.Rdata"
     deseq_results_te <<- "deseq_TE_instances_salmonTE.Rdata"
     deseq_results_te_csv <<- "02_deseq_results_te_instances.csv"
+    deseq_results_te_csv_male <<- "02_deseq_results_te_instances.csv"
+    deseq_results_te_csv_female <<- "02_deseq_results_te_female_instances.csv"
     
     deseq_dds_gene <<- "dds_genes_salmonTE.Rdata"
     deseq_results_gene <<- "deseq_genes_salmonTE.Rdata"
