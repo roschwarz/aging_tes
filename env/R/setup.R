@@ -37,6 +37,7 @@ suppressPackageStartupMessages({
     library(cowplot)
     library(biomaRt)
     library(gt)
+    library(UpSetR)
 })
 
 options(scipen = 999) # prevent to switching to scientific notation like 1e+06

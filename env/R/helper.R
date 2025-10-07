@@ -328,6 +328,24 @@ fig_index <- function(plot, outdir, meta, index_file = 'index.tsv', width = 6, h
                         dpi = dpi,
                         width = width,
                         height = height)
+    } else if (inherits(plot, "HeatmapList")) {
+        
+        # convert cm into inch
+        width <- width / 2.54
+        height <- height / 2.54
+        
+        pdf(file = image_path, width = width, height = height)
+            draw(plot, heatmap_legend_side = "bottom")
+        dev.off()
+    } else if (inherits(plot, "upset")) {
+        
+        # convert cm into inch
+        width <- width / 2.54
+        height <- height / 2.54
+        
+        pdf(file = image_path, width = width, height = height)
+            show(plot)
+        dev.off()
     } else {
         stop("Unsupported plot type. Please provide a ggplot or grob object.")
     }
