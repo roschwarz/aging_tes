@@ -328,7 +328,7 @@ fig_index <- function(plot, outdir, meta, index_file = 'index.tsv', width = 6, h
                         dpi = dpi,
                         width = width,
                         height = height)
-    } else if (inherits(plot, "HeatmapList")) {
+    } else if (inherits(plot, "HeatmapList") || inherits(plot, "Heatmap")) {
         
         # convert cm into inch
         width <- width / 2.54
