@@ -14,6 +14,7 @@ load_rna_seq_env <- function(){
     # Directories & Files
     rna_seq_results_dir <<- 'results/rna_seq/'
     rna_seq_deseq_dir <<- paste0(rna_seq_results_dir, 'deseq2/')
+    rna_seq_deseq_dir_female <<- paste0(rna_seq_results_dir, 'female/deseq2/')  
     
     deseq_dds_te <<- "dds_TE_instances_salmonTE.Rdata"
     deseq_results_te <<- "deseq_TE_instances_salmonTE.Rdata"

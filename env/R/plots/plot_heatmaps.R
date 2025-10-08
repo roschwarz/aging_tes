@@ -2,9 +2,11 @@
 #' Heatmaps, z-score, tpms
 #' ------------------------------------------------------------------------------
 #' @param results A DESeq2 result object
+#' @param tissue Tissue name
+#' @param sample_size A vector of length 2 indicating the number of samples for the respective group
 #' @return A ggplot2 object
 #' @export
-heatmap_top50 <- function(df, tissue){
+heatmap_top50 <- function(df, tissue, sample_size = c(5,5)){
     
     ht_opt$TITLE_PADDING = unit(c(4.5, 4.5), "points") 
     col_fun = colorRamp2(c(-2, 0, 2), c('#457b9d','white','#e63946'))
@@ -30,6 +32,8 @@ heatmap_top50 <- function(df, tissue){
                                                        gp = gpar(fontsize = rep(6, 50)))
     )
     
+    col_split <- c(rep(1, sample_size[1]), rep(2, sample_size[2]))
+    
     Heatmap(
         df,
         col = col_fun ,
@@ -46,7 +50,7 @@ heatmap_top50 <- function(df, tissue){
         column_names_gp = gpar(fontsize = 8),
         show_heatmap_legend = FALSE,
         cluster_columns = FALSE,
-        column_names_rot = 0,
+        column_names_rot = 90,
         column_names_centered = TRUE,
         row_title_gp = gpar(fontsize = 8),
         top_annotation = HeatmapAnnotation(age = anno_block(
@@ -55,7 +59,7 @@ heatmap_top50 <- function(df, tissue){
             labels_gp = gpar(col = 'black', fontsize = 8)
         )),
         right_annotation = row_annotation,
-        column_km = 2,
+        column_split = col_split,
         cluster_rows = FALSE,
         column_labels = rep('', ncol(df)),
         row_labels = rep('', 50),
