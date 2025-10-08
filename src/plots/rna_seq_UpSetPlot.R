@@ -60,3 +60,49 @@ fig_index(plot = up_set_pl,
           height = 10,
           dpi = 300,
           format = 'pdf')
+
+# ============================================================================================================
+# Just to get the overlap between all conditions.
+# ============================================================================================================
+
+library(VennDiagram)
+
+venn <- venn.diagram(
+    x = expressed_TEs,
+    category.names = names(expressed_TEs),
+    
+    
+    # Circles
+    lwd = 2,  
+    #fill = tissue.color[2:4], #c('#264653', '#2A9D8F',  '#E9C46A'),
+    alpha = c(0.7, 0.7, 0.7, 0.7, 0.7),
+    
+    
+    # Number
+    cex = 1, # font size
+    fontface = "bold",
+    fontfamily = "arial",
+    # 
+    # # Set names
+    cat.cex = 1.5,
+    cat.default.pos = "outer",
+    cat.fontface = "bold",
+    cat.fontfamily = "arial",
+    # cat.pos = c(-27, 27),
+    cat.dist = c(0.055, 0.055, 0.055, 0.055, 0.055),
+    # main = header,
+    scaled = F,
+    print.mode = c("raw", "percent"),
+    
+    # Output
+    filename = NULL, #paste0(figures, 'Panel_2C_VennDiagram.svg'),
+    imagetype = "svg",
+    output = FALSE,
+    width = 200,
+    height = 500,
+    resolution = 300,
+    disable.logging = TRUE
+    
+)
+
+grid::grid.draw(venn)
