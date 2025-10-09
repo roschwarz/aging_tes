@@ -229,3 +229,37 @@ for (hm in names(heat_maps)) {
               height = 13)
     
 }
+
+# ------------------------------------------------------------------------------
+# Step 4: Collect some numbers
+# ------------------------------------------------------------------------------
+
+df <- data.frame(id = c(rownames(female_top_50$brain), rownames(female_top_50$skin),
+                        rownames(top_50$brain), rownames(top_50$skin), rownames(top_50$blood)),
+                 sex = c(rep('female', nrow(female_top_50$brain)), rep('female', nrow(female_top_50$skin)),
+                         rep('male', nrow(top_50$brain)), rep('male', nrow(top_50$skin)), rep('male', nrow(top_50$blood))),
+                 tissue = c(rep('brain', nrow(female_top_50$brain)), 
+                            rep('skin', nrow(female_top_50$skin)), 
+                            rep('brain', nrow(top_50$brain)), 
+                            rep('skin', nrow(top_50$skin)), 
+                            rep('blood', nrow(top_50$blood)))
+                 )
+
+
+df %>% separate(col = 'id', 
+                      into = c('order', 'super', 'fam', 'start'), 
+                      sep = "[|]", remove = F) %>% 
+    group_by(sex, tissue) %>%
+    summarise(n = n(),
+              LINE = sum(order == 'LINE'),
+              SINE = sum(order == 'SINE'),
+              LTR = sum(order == 'LTR'),
+              DNA = sum(order == 'DNA')) %>%
+    ungroup()
+
+df %>% separate(col = 'id', 
+                      into = c('order', 'super', 'fam', 'start'), 
+                      sep = "[|]", remove = F) %>% 
+    group_by(sex, tissue, super) %>%
+    summarise(n = n()) %>% view()
+    print(n = 60)
