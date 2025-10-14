@@ -6,9 +6,9 @@ source $RIPPCHEN/activate.sh -l true -c false -r true -a "$@"
 # Naming  #
 ###########
 
-RAW_DATA=../../data/raw/rna_seq/female/20250226_929_RS/
-RENAMED_DATA=../../data/raw/rna_seq/female/
-PROCESSED_DATA=../../data/processed/rna_seq/deduplicated/female/
+RAW_DATA=/misc/paras/data/rschwarz/projects/aging_tes/data/raw/rna_seq/female/20250728_965_RS/
+RENAMED_DATA=/misc/paras/data/rschwarz/projects/aging_tes/data/raw/rna_seq/female/
+PROCESSED_DATA=/misc/paras/data/rschwarz/projects/aging_tes/data/processed/rna_seq/deduplicated/female/
 
 quality_check(){
 
@@ -19,7 +19,9 @@ quality_check(){
 }
 #quality_check
 
+# Deduplicate based on UMI using the preprocess tool from the rippchen pipeline
 dedup(){
+
 
     declare -a cmds
 
@@ -51,17 +53,20 @@ quality_check_dedup(){
 
 detector_old(){
 
-    DETEctorEnv=/home/lakatos/rschwarz/.cache/pypoetry/virtualenvs/detector-w0DMliGL-py3.9/bin/activate
-    results=../../results/rna_seq/female/
+    #DETEctorEnv=/home/lakatos/rschwarz/.cache/pypoetry/virtualenvs/detector-w0DMliGL-py3.9/bin/activate
+    DETEctorEnv=/misc/paras/data/rschwarz/coding/DETEctor/.venv/bin/activate
+    DETEctor=/misc/paras/data/rschwarz/coding/DETEctor/DETEctor.py
+    results=/misc/misc/data/rschwarz/projects/aging_tes/results/rna_seq/female/detector/
     threads=56
 
     mkdir -p $results
     
     cmds=("source $DETEctorEnv;\
-          DETEctor.py quant \
+          python3 $DETEctor map-salmon \
           -t $threads \
           -f $PROCESSED_DATA \
           -r mm10.TE.transcriptome.v102 \
+          -l paired \
           -o $results")
 
     commander::printcmd -a cmds
@@ -70,99 +75,18 @@ detector_old(){
 }
 #detector_old
 
-salmon_map(){
-
-    results_dir="../../results/rna_seq/female/skin_dup"
-    mkdir -p $results_dir
-
-    export salmon=/misc/paras/data/rschwarz/programs/salmon.v0.8.2/salmon
-    export index=/misc/paras/data/rschwarz/common_data/salmonTE_indices/references/mm10.TE.transcriptome.v102
-    export results="$results_dir"
-
-    find $PROCESSED_DATA -type f -name "*.fastq.gz" | \
-        sort | paste -d ' ' - - | \
-        parallel --jobs 10 --colsep ' ' --env salmon --env index --env results \
-        --joblog "$results_dir/parallel_joblog.txt" --bar \
-        'output_dir=$(basename {1} _R1.fastq.gz); $salmon quant -l A -1 {1} -2 {2} -p 5 -i $index -o $results/${output_dir/}'
-
-}
-#salmon_map
-
-
-merge_tables(){
-    
-    for tissue in skin; do #, brain; do
-
-        awk '
-        FNR==1 {
-            file_num++
-            if (file_num==1) header="TE"
-            header = header "\t" FILENAME
-            next
-        }
-        {
-            key=$1
-            value=$NF
-            data[key,file_num]=value
-            keys[key]=1
-        }
-        END {
-            print header
-            for (k in keys) {
-                line = k
-                for (i=1; i<=file_num; i++) {
-                    line = line "\t" ( (k,i) in data ? data[k,i] : "NA")
-                }
-                print line
-            }
-        }
-        ' ../../results/rna_seq/female/skin_dup/*/quant.sf > ../../results/rna_seq/female/skin_dup/EXPR.csv # ../../results/rna_seq/female/*${tissue}*/quant.sf > ../../results/rna_seq/female/EXPR_${tissue}.csv
-
-
-    done
-}
-#merge_tables
-
-
-salmonTE_map(){
-
-
-    results_dir="../../results/rna_seq/female/salmonTE/"
-
-    mkdir -p $results_dir
-    declare -a fastqs
-
-	for files in $(ls "$PROCESSED_DATA"*R*.fastq.gz | rev | cut -c 12- | rev | uniq); do
-    		
-	    fastqs+="${files}R1.fastq.gz ${files}R2.fastq.gz "
-	    
-	done
-
-	    cmds=("cd $resultDir/; source ~/programs/conda/bin/activate salmonTE; \
-		/misc/paras/data/rschwarz/programs/SalmonTE/SalmonTE.py quant \
-		    --reference=mm10.TE.transcriptome.v102 \
-		    --outpath=$resultDir \
-		    --num_threads=56 \
-            --exprtype=count \
-    		    $fastqs")
-	
-    commander::printcmd -a cmds
-	commander::qsubcmd -r -p threads -t 56 -i 1 -n sal_"${tissue}" -o "$results_dir" -a cmds
-}
-#salmonTE_map
-
 
 # Map the raw data with the rippchen pipeline from Konstantin
 standard(){
 
-    results_dir="../../results/rna_seq/female/rippchen"
+    results_dir="/misc/paras/data/rschwarz/projects/aging_tes/results/rna_seq/female/rippchen/"
 
     mkdir -p $results_dir
     threads=56
 
     declare -a cmds
 
-    for fi in $(find $RAW_DATA -type f -name "*skin*R1.fastq.gz" | rev | cut -c 13- | rev | uniq); do
+    for fi in $(find $RAW_DATA -type f -name "*R1.fastq.gz" | rev | cut -c 13- | rev | uniq); do
         fastqR1=${fi}_R1.fastq.gz
         fastqR2=${fi}_R2.fastq.gz
         fastqR3=${fi}_UMI.fastq.gz
