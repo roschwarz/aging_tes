@@ -78,6 +78,144 @@ load_rna_seq_female_old_env <- function(){
     
 }
 
+
+# ----------------------------------------------------------------------------
+# All RNA-Seq experiments
+#
+# TODO: MAKE IT MORE GENERIC FOR THE WHOLE DATE WHEN YOU HAVE TIME
+# ------------------------------------------------------------------------------
+#@export
+#' Load all RNA-Seq environments
+load_all_rna_seq_envs <- function(sex, base_results_path = "./results/rna_seq"){
+    
+    logmsg("→ Loading all rna seq envs...")
+    
+    if (!sex %in% c("female", "male")) {
+        stop("sex must be either 'female' or 'male'")
+    }
+    
+    # New environment for data set
+    env <- new.env(parent = .GlobalEnv)
+    
+    logmsg(paste0("→ Creating rna seq namespace for ", sex, "..."))
+    
+    # Directories & Files 
+    if (sex == 'male') {
+        env$count_tables <- list(brain = "./results/rna_seq/brain/alignment_SalmonTE/EXPR.csv",
+                                 skin = "./results/rna_seq/skinII/alignment_SalmonTE/EXPR.csv",
+                                 blood = "./results/rna_seq/blood/alignment_SalmonTE/EXPR.csv")
+        
+    } else if (sex == 'female') {
+        env$count_tables <- "./results/rna_seq/female/detector/EXPRs.csv"
+    }
+    
+    # Helper function for standard file names
+    create_file_mapping <- function(sex, analysis_types = c("te", "gene", "mixed")) {
+        file_mapping <- list()
+
+        for (type in analysis_types) {
+            base_name <- switch(type,
+                                "te" = "TE_instances",
+                                "gene" = "genes",
+                                "mixed" = "mixed")
+
+            file_mapping[[paste0("deseq_dds_", type)]] <-
+                paste0("dds_", base_name, "_salmonTE.Rdata")
+
+            file_mapping[[paste0("deseq_results_", type)]] <-
+                paste0("deseq_", base_name, "_salmonTE.Rdata")
+
+            file_mapping[[paste0("deseq_results_", type, "_csv")]] <-
+                paste0("02_deseq_results_", sex, "_",
+                       ifelse(type == "te", "instances",
+                              ifelse(type == "gene", "genes", "mixed")), ".csv")
+        }
+
+        return(file_mapping)
+    }
+    
+    env$results_dir <- paste0(base_results_path, "_", sex, "/")
+    env$deseq_dir <- paste0(env$results_dir, "deseq2/")
+    
+    env$files <- create_file_mapping(sex)
+    
+    base_path <- paste0(getwd(), "/env/R/data")
+    
+    rna_files <- c("rna_seq_load_deseq_tes.R", "annotations.R")
+    
+    for (f in rna_files){
+        source(file.path(base_path, f))
+    }
+    
+    return(env)
+    
+}
+
+
+
+#' Generic RNA-Seq Environment Loader  
+#' @param sex Character string indicating sex ("female" or "male")
+#' @param base_results_path Character string for base results directory
+#' @export
+load_foo_rna_seq_env <- function(sex, base_results_path = "./results/rna_seq/") {
+    
+    # Validierung der Eingabe
+    if (!sex %in% c("female", "male")) {
+        stop("sex must be either 'female' or 'male'")
+    }
+    
+    logmsg(paste0("→ Loading rna seq env for ", sex, "..."))
+    
+    # Helper function für standardisierte Dateinamen
+    create_file_mapping <- function(sex, analysis_types = c("te", "gene", "mixed")) {
+        file_mapping <- list()
+        
+        for (type in analysis_types) {
+            base_name <- switch(type,
+                                "te" = "TE_instances",
+                                "gene" = "genes", 
+                                "mixed" = "mixed")
+            
+            file_mapping[[paste0("deseq_dds_", type)]] <- 
+                paste0("dds_", base_name, "_salmonTE.Rdata")
+            
+            file_mapping[[paste0("deseq_results_", type)]] <- 
+                paste0("deseq_", base_name, "_salmonTE.Rdata")
+            
+            file_mapping[[paste0("deseq_results_", type, "_csv")]] <- 
+                paste0("02_deseq_results_", sex, "_", 
+                       ifelse(type == "te", "instances", 
+                              ifelse(type == "gene", "genes", "mixed")), ".csv")
+        }
+        
+        return(file_mapping)
+    }
+    
+    # Pfade erstellen
+    sex_results_dir <- paste0(base_results_path, sex, "/")
+    sex_deseq_dir <- paste0(sex_results_dir, "deseq2/")
+    
+    # Globale Variablen zuweisen
+    assign("counts_rna", paste0(sex_results_dir, "detector/EXPRs.csv"), envir = .GlobalEnv)
+    assign("rna_seq_results_dir", sex_results_dir, envir = .GlobalEnv) 
+    assign("rna_seq_deseq_dir", sex_deseq_dir, envir = .GlobalEnv)
+    
+    # Alle Datei-Mappings erstellen und zuweisen
+    file_mappings <- create_file_mapping(sex)
+    for (var_name in names(file_mappings)) {
+        assign(var_name, file_mappings[[var_name]], envir = .GlobalEnv)
+    }
+    
+    # Zusätzliche R-Dateien sourcen
+    base_path <- paste0(getwd(), "/env/R/data")
+    rna_files <- c("rna_seq_load_deseq_tes.R", "annotations.R")
+    
+    for (f in rna_files) {
+        source(file.path(base_path, f))
+    }
+}
+
+
 # ------------------------------------------------------------------------------
 # RNA-Seq female
 # ------------------------------------------------------------------------------
