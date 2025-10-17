@@ -64,6 +64,58 @@ pdf(file = paste0(figure_dir, '04_log2fc_heat_superFam_9.6x13_300.pdf'), width =
     draw(hm, heatmap_legend_side = "bottom")
 dev.off()
 
+# === horizontal ===
+
+hm_horizontal <-  Heatmap(t(te.mean.log2),
+                          width = ncol(t(te.mean.log2)) * unit(3, "mm"),
+                          height = nrow(t(te.mean.log2)) * unit(3, "mm"),
+                          row_names_rot = 0,
+                          col = col_fun,
+                          column_names_rot = 90,
+                          column_names_side = "top",
+                          row_names_side = "left",
+                          cluster_columns = FALSE,
+                          cluster_rows = FALSE,
+                          #row_split = sex_split,
+                          # left_annotation = rowAnnotation(
+                          #     block = anno_block(
+                          #         gp = gpar(fill = sex_colors),
+                          #         labels = c("female", "male"),
+                          #         labels_rot = 0,
+                          #         labels_gp = gpar(col = c("black", "white"), fontsize = 8)
+                          #     )
+                          # ),
+                          heatmap_legend_param = list(title = "log2(mean(fold change))", 
+                                                      direction = 'vertical',
+                                                      grid_width = unit(0.2, "cm"),
+                                                      legend_width = unit(3.5, 'cm'),
+                                                      labels_gp = gpar(fontsize = 8),
+                                                      title_gp = gpar(fontsize = 8)),
+                          border = TRUE,
+                          row_title = NULL,
+                          column_names_gp = gpar(fontsize = 8),
+                          row_names_gp = gpar(fontsize = 8)
+                          
+)
+
+draw(hm_horizontal, heatmap_legend_side = "right")
+
+meta <- list(name = 'te_super_families_log2fc_heatmap_flipped',
+             description = 'Heatmap of log2 mean fold change of transposable element super families in male in a horizontal version',
+             tags = c('expression', 'rna-seq', 'super_family'),
+             parameters = list(tissues = c('brain', 'skin', 'blood')),
+             script = 'rna_seq_family_heatmap.R'
+)
+
+fig_index(plot = hm_horizontal,
+          outdir = figure_dir,
+          meta = meta,
+          index_file = 'figure_index.tsv',
+          width = 15,
+          height = 3,
+          dpi = 300,
+          format = 'pdf')
+
 
 
 #### Female ####
