@@ -46,7 +46,11 @@ file_assignment <- read.csv('/misc/paras/data/rschwarz/projects/aging_tes/data/r
 meta_data <- file_assignment %>% 
     tidyr::separate(new_name, into = c('id', 'tissue', 'age'), sep = "_", remove = FALSE) %>% 
     dplyr::select(-id) %>% 
-    mutate(age_group = case_when(age == "18w" ~ 'young', .default = 'old'))
+    mutate(age_group = case_when(age == "18w" ~ 'young', .default = 'old')) %>% 
+    filter(!grepl("^no012", new_name)) %>%  # remove no012 samples which is a mouse with id 568
+    filter(!grepl("^no032", new_name)) # %>% # remove no032 samples which is a mouse with id 568
+    # filter(!grepl("^no015", new_name))  %>% # remove no015 samples which is a mouse with id 591
+    # filter(!grepl("^no045", new_name))  # remove no045 samples which is a mouse with id 591
 
 counts <- data.table::fread(counts_rna) %>% 
     filter(grepl("^chr", Name)) %>% 
