@@ -206,6 +206,14 @@ create_te_analysis_panel <- function(deseq_data,
             ...)
         
         
+    }else if(section == 'bottom') {
+        combined_plot <- ggarrange(
+            young_volcano, middle_volcano, old_volcano, 
+            nrow = 1, ncol = 3,
+            align = 'h',
+            ...)
+        
+        
     }else{
         combined_plot <- ggarrange(
             kimura_down_pl, all_volcano, kimura_up_pl, 
