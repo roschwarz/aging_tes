@@ -15,8 +15,9 @@
 # OUTPUT:
 # - DESeq2 results and objects:
 #   ./results/rna_seq/female/deseq2/dds_TE_instances_salmonTE.Rdata         : DESeq2 dds objects
-#   ./results/rna_seq/femal/deseq2/deseq_TE_instances_salmonTE.Rdata     : DESeq2 result objects
+#   ./results/rna_seq/female/deseq2/deseq_TE_instances_salmonTE.Rdata     : DESeq2 result objects
 #   ./results/tables/02_deseq_results_te_female.csv     : Merged results (CSV)
+#   ./results/rna_seq/female/deseq2/female_vst_rna_TE_instances_SalmonTE.Rdata
 #
 # DEPENDENCIES:
 # - Custom package: `aging_tes` (loaded via `devtools`)
@@ -49,8 +50,7 @@ meta_data <- file_assignment %>%
     mutate(age_group = case_when(age == "18w" ~ 'young', .default = 'old')) %>% 
     filter(!grepl("^no012", new_name)) %>%  # remove no012 samples which is a mouse with id 568
     filter(!grepl("^no032", new_name)) # %>% # remove no032 samples which is a mouse with id 568
-    # filter(!grepl("^no015", new_name))  %>% # remove no015 samples which is a mouse with id 591
-    # filter(!grepl("^no045", new_name))  # remove no045 samples which is a mouse with id 591
+
 
 counts <- data.table::fread(counts_rna) %>% 
     filter(grepl("^chr", Name)) %>% 
@@ -61,7 +61,7 @@ counts <- data.table::fread(counts_rna) %>%
 # ------------------------------------------------------------------------------
 
 if (!file.exists(paste0(rna_seq_deseq_dir, deseq_results_te))) {
-# Load required libraries for parallel processing
+    # Load required libraries for parallel processing
     library(BiocParallel)
     library(future.apply)
     
@@ -144,3 +144,27 @@ write.table(deseq.te.merged,
             quote = F,
             sep = ',')
 
+# ------------------------------------------------------------------------------
+# Step 3: Get and store vst counts
+# ------------------------------------------------------------------------------
+
+if (!exists("dds_list")) {
+    message('Load dds object...')
+    dds_list <- loadRdata(paste0(rna_seq_deseq_dir_female, "dds_TE_instances_salmonTE.Rdata"))
+}
+
+female_vst <- sapply(names(dds_list), simplify = F, function(x){
+    
+    vst_tmp <- data.frame(getVarianceStabilizedData(dds_list[[x]]))
+    
+    vst_tmp <- rownames_to_column(vst_tmp, var = "te_id")
+    
+    vst_tmp <- vst_tmp %>% 
+        gather(key = 'sample', value = "vst", names(vst_tmp)[2:length(vst_tmp)]) %>% 
+        splitTEID("te_id")
+    
+    return(vst_tmp)
+        
+    })
+    
+save(female_vst, file = paste0(rna_seq_deseq_dir, "vst_TE_instances_SalmonTE.Rdata"))
