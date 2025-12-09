@@ -5,95 +5,6 @@ if (!"aging_tes" %in% loadedNamespaces()) {
 
 aging_tes::load_te_island_env()
 
-library(ComplexHeatmap)
-# ========================== Functions =========================================
-
-heat_it_up <- function(data_frame){
-    
-    require(pheatmap)
-    
-    data_frame <- data_frame %>%
-        dplyr::select(-c(id, seqnames, start, end, width, strand)) %>% 
-        remove_rownames() %>% 
-        column_to_rownames("external_gene_name")
-    
-    pheatmap(log2(t(as.matrix(data_frame) + 1)), 
-             border_color = NA,
-             clustering_method = 'average',
-             #annotation_col = col_annotation,
-             fontsize = 8,
-             #fontfamily = 'Arial',
-             cluster_rows = F,
-             cluster_cols = F,
-             #breaks = seq(0, 4, length.out = 100),
-             color = colorRampPalette(c('white', '#457b9d', '#e63946'))(101),
-             #cutree_rows = 2,
-             #cutree_cols = 2,
-             treeheight_row = 0, # removes dendrogram
-             treeheight_col = 0
-    )
-    
-}
-
-
-get_region_features <- function(data, chromosome, start_coord, end_coord){
-    
-    data <- data %>%
-        filter(seqnames == chromosome,
-               dplyr::between(start, start_coord, end_coord),
-               dplyr::between(end, start_coord, end_coord))
-    
-    return(data[order(data$start),])
-    
-    
-}
-
-data.brain <- loadRdata("results/pcdhb/find_cell_lines/tpm.brain.grouped.Rdata")
-
-
-protocadherin_cluster <- get_region_features(data.brain, 
-                                             "chr18", 
-                                             37444670, 
-                                             37477341)
-
-
-
-x <- names(protocadherin_cluster)
-x <- x[grepl("^3t3.*", x)]
-
-cell_3t3 <- protocadherin_cluster[,c('id', x, 'seqnames', 'start', 'end', 'width', 'strand', 'external_gene_name')] %>% 
-    filter(strand == "+") %>% 
-    mutate(external_gene_name = sub("_Cluster_", "_island_", external_gene_name)) %>%
-    dplyr::select(-c(id, seqnames, start, end, width, strand)) %>% 
-    remove_rownames() %>% 
-    column_to_rownames("external_gene_name")
-
-
-ht_opt$TITLE_PADDING = unit(c(4.5, 4.5), "points")    # setting to get the titels in the heatmaps centered from a horizontal perspective see: https://jokergoo.github.io/ComplexHeatmap-reference/book/a-single-heatmap.html?q=color%20title#heatmap-titles
-col_fun = colorRampPalette(c('white', '#457b9d', '#e63946'))(101)
-
-
-hm <- Heatmap(log2(t(as.matrix(cell_3t3) + 1)),
-              col = col_fun,
-              border = TRUE,
-              row_names_side = 'left',
-              cluster_rows = FALSE,
-              row_names_gp = gpar(fontsize = 10),
-              column_names_gp = gpar(fontsize = 10),
-              cluster_columns = FALSE,
-              heatmap_legend_param = list(title = expression(log[2] * "(TPM+1)"),
-                                          direction = 'horizontal',
-                                          legend_width = unit(3, 'cm'),
-                                          grid_height = unit(0.2, 'cm'),
-                                          title_gp = gpar(fontsize = 8),
-                                          labels_gp = gpar(fontsize = 8),
-                                          title_position = "topcenter"))
-
-pdf(file = paste0(figure_dir, 's05_3t3_tpm_expression_protocadherin.pdf'), width = 9, height = 4.5)
-draw(hm)
-dev.off()
-
-
 #################
 # pcdhb15 locus #
 #################
@@ -139,8 +50,8 @@ attributes(pcdhb15_geneTRack)$range$gene <- "Pcdhb15"
 
 
 teRegio <- AnnotationTrack(teRegionRanges[teRegionRanges@elementMetadata$names %in% c("TE_Cluster_728983", "TE_Cluster_728986")],
-                           name = 'te island',
-                           id = c("TE island 728239", "TE island 728242"),
+                           name = 'te region',
+                           id = c("TE Region 728239", "TE Region 728242"),
                            featureAnnotation = "id",
                            fontcolor.item = "white",
                            fill = "black",
@@ -197,14 +108,6 @@ nanopore_reads <- Gviz::AnnotationTrack(
     id = c()
 )
 
-# nanopore_reads_2 <- Gviz::AnnotationTrack(
-#     range = 'results/te_island/long_read_verification/dataset_4_PMID_39365698/foo.bam',
-#     genome = "mm10",
-#     name = "nanopore reads XX",
-#     fill = "lightgray",
-#     chromosome = 'chr18',
-#     id = c()
-# )
 
 
 ##############
@@ -240,25 +143,25 @@ sanger_te_pcdhb15 <- Gviz::AnnotationTrack(GRanges(seqnames = c('chr18', 'chr18'
 #######################
 
 ht <- HighlightTrack(trackList = c(nanopore_reads,
-    tss_spanning_reads,
-    sanger_te_pcdhb15),
-    start = c(37473513),
-    width = 154,
-    fill = 'transparent',
-    chromosome = 'chr18',
-    inBackground = FALSE)
+                                   tss_spanning_reads,
+                                   sanger_te_pcdhb15),
+                     start = c(37473513),
+                     width = 154,
+                     fill = 'transparent',
+                     chromosome = 'chr18',
+                     inBackground = FALSE)
 
 
 Gviz::plotTracks(list(gtrack, 
                       pcdhb15_geneTRack,
                       teRegio,
                       teInstance,
-                      #nanopore_reads_2,
+                      #nanopore_reads,
                       ht,
                       sanger_primer),
                  shape = 'box',
                  chromosome = "chr18",
-                 from = start_coord + 4800, # 4000
+                 from = start_coord + 4000, # 4800
                  to = end_coord - 2500,
                  col.axis = "black",
                  col.title = "black",
