@@ -16,8 +16,10 @@ if (!"aging_tes" %in% loadedNamespaces()) {
     devtools::load_all("env/")
 }
 
+# Load data
 vst_counts_pro_locus <- read.csv(paste0(table_dir, "pcdhb15_locus_heatmap_zscore_vst.csv"))
 df <- read.csv(paste0(table_dir, "pcdhb15_locus_heatmap_log2fc_fdr.csv"))
+
 # ------------------------------------------------------------------------------------------------------------
 # Create heat map
 # ------------------------------------------------------------------------------------------------------------
