@@ -285,6 +285,26 @@ getCoordFeatureCountsMat <- function(file){
     return(df[1:5])
 }
 
+
+ask_yes_no <- function(prompt, default = "n") {
+    norm <- function(x) tolower(trimws(x))
+    def <- if (is.null(default)) NULL else norm(default)
+    repeat {
+        ans <- if (interactive()) {
+            readline(prompt)
+        } else {
+            cat(prompt)
+            line <- readLines(con = stdin(), n = 1, warn = FALSE)
+            if (length(line) == 0) "" else line
+        }
+        ans <- norm(ans)
+        if (ans == "" && !is.null(def)) return(def %in% c("y", "yes", "j", "ja"))
+        if (ans %in% c("y", "yes", "j", "ja")) return(TRUE)
+        if (ans %in% c("n", "no", "nein")) return(FALSE)
+        cat("Please provide 'y' or 'n'.\n")
+    }
+}
+
 # ------------------------------------------------------------------------------
 # Save figures with an index table
 # ------------------------------------------------------------------------------
@@ -303,8 +323,8 @@ fig_index <- function(plot, outdir, meta, index_file = 'index.tsv', width = 6, h
     file_exists <- file.exists(image_path)
     if (file_exists) {
         cat("WARNING: File", image_path, "allready exists.\n")
-        response <- readline("Do you want to overwrite it? (y/n): ")
-        if (tolower(response) != "y") {
+        response <- ask_yes_no("Do you want to overwrite it? (y/n):") #readline("Do you want to overwrite it? (y/n): ")
+        if (!response) {
             cat("Stop: File will not be overwritten.\n")
             return(invisible(NULL))
         } else {
@@ -491,3 +511,26 @@ process_overlapping <- function(
     return(results)
 }
 
+
+bootStrapping <- function(n.intronic.tes.target,
+                          n.intronic.tes.background,
+                          moves = 1000){
+    
+    random.target <- sample_n(n.intronic.tes.target,
+                              moves,
+                              replace = T)[['n.intronicTEs']] 
+    
+    random.background <- sample_n(n.intronic.tes.background,
+                                  moves,
+                                  replace = T)[['n.intronicTEs']]
+    
+    
+    r <- (random.target + 0.1)/(random.background + 0.1)
+    
+    
+    result <- data.frame(n.target = random.target, 
+                         n.background = random.background, 
+                         ratio = r)
+    
+    return(result)
+}
