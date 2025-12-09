@@ -9,7 +9,7 @@ n_top = 50
 
 # ---------------------------------- Volcanos for TEs -------------------------------------------------------- 
 
-deseq_te_merged_female <- fread(paste0(table_dir, deseq_results_te_csv_female)) %>% 
+deseq_te_merged_female <- fread(paste0(table_dir, deseq_results_te_csv)) %>% 
     mutate(sex = 'female',
            sex_tissue = paste0(sex, "_", tissue))
 

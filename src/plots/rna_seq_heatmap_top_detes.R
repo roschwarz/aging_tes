@@ -5,12 +5,11 @@ if (!"aging_tes" %in% loadedNamespaces()) {
 aging_tes::load_plotting_env()
 aging_tes::load_rna_seq_env()
 
-
 deseq_te_merged_male <- fread(paste0(table_dir, deseq_results_te_csv_male)) %>% 
     mutate(sex = 'male',
            sex_tissue = paste0(sex, "_",tissue))
 
-deseq_te_merged_female <- fread(paste0(table_dir, deseq_results_te_csv_female)) %>% 
+deseq_te_merged_female <- fread(paste0(table_dir, deseq_results_te_csv_female)) %>%
     mutate(sex = 'female',
            sex_tissue = paste0(sex, "_", tissue))
 
@@ -65,7 +64,7 @@ if (!file.exists(paste0(rna_seq_results_dir, "female_tpms_rna_TE_instances_Salmo
     
     female_tpm <- sapply(names(dds_list), simplify = F, function(x){
         
-        counts <- counts(dds_list[[x]])
+        counts <- data.frame(counts(dds_list[[x]]))
         
         te_length <- data.frame(te_id = row.names(counts))
         
@@ -103,8 +102,9 @@ if (!file.exists(paste0(rna_seq_results_dir, "female_tpms_rna_TE_instances_Salmo
 # ------------------------------------------------------------------------------
 # Step 2: Filter for the top 50 of DETEs and calculate the z-score
 # ------------------------------------------------------------------------------
+n_top = 50
 
-top_50 <- sapply(tissues, simplify = F, function(t){
+male_top_detes <- sapply(tissues, simplify = F, function(t){
     
     norm <-  tpm[[t]] %>%  
         filter(order %in% c('LINE', 'SINE', 'LTR', 'DNA'),
@@ -112,8 +112,8 @@ top_50 <- sapply(tissues, simplify = F, function(t){
                super_family != "NA") %>% 
         filter(te_id %in% (deseq_te_merged_male %>% 
                                filter(tissue == t) %>%
-                               dplyr::slice_min(order_by = padj, n = 50) %>% 
-                               dplyr::slice_max(order_by = baseMean, n = 50) %>% 
+                               dplyr::slice_min(order_by = padj, n = n_top) %>% 
+                               dplyr::slice_max(order_by = baseMean, n = n_top) %>% 
                                dplyr::pull(te_id))) 
     
     norm <- norm %>% 
@@ -200,10 +200,10 @@ female_top_50 <- sapply(names(female_tpm), simplify = F, function(t){
 # Step 3: Create the heat maps for each tissue separately
 # ------------------------------------------------------------------------------
 
-brain_heatMap <- heatmap_top50(top_50$brain, 'brain')
-skin_heatMap <- heatmap_top50(top_50$skin, 'skin')
-blood_heatmap <- heatmap_top50(top_50$blood, 'blood', sample_size = c(4,5))
-female_brain_heatMap <- heatmap_top50(female_top_50$brain, 'brain')
+brain_heatMap <- heatmap_top50(male_top_detes$brain, 'brain')
+skin_heatMap <- heatmap_top50(male_top_detes$skin, 'skin')
+blood_heatmap <- heatmap_top50(male_top_detes$blood, 'blood', sample_size = c(4,5))
+female_brain_heatMap <- heatmap_top50(female_top_50$brain, 'brain', sample_size = c(5,4))
 female_skin_heatMap <- heatmap_top50(female_top_50$skin, 'skin')
 
 heat_maps <- list(male_brain = heatmap_top50(top_50$brain, 'brain'),
@@ -263,3 +263,56 @@ df %>% separate(col = 'id',
     group_by(sex, tissue, super) %>%
     summarise(n = n()) %>% view()
     print(n = 60)
+    
+# ------------------------------------------------------------------------------
+# Overlap male female - Draft
+# ------------------------------------------------------------------------------    
+ 
+        
+t <- 'skin'
+
+#### Top 50 male 
+    
+top50_male <-  tpm[[t]] %>%  
+        filter(order %in% c('LINE', 'SINE', 'LTR', 'DNA'),
+               !grepl("[?]", super_family),
+               super_family != "NA") %>% 
+        filter(te_id %in% (deseq_te_merged_male %>% 
+                               filter(tissue == t) %>%
+                               dplyr::slice_min(order_by = padj, n = 50) %>% 
+                               dplyr::slice_max(order_by = baseMean, n = 50) %>% 
+                               dplyr::pull(te_id))) %>% 
+    dplyr::pull(te_id) %>% unique()
+    
+
+norm <-  female_tpm[[t]] %>%  
+    filter(te_id %in% top50_male,
+           order %in% c('LINE', 'SINE', 'LTR', 'DNA'),
+           !grepl("[?]", super_family),
+           super_family != "NA") %>%
+    filter(te_id %in% (deseq_te_merged_female %>% 
+                           filter(tissue == t) %>%
+                           #dplyr::slice_min(order_by = padj, n = 50) %>% 
+                           #dplyr::slice_max(order_by = baseMean, n = 50) %>% 
+                           dplyr::pull(te_id))) 
+
+norm <- norm %>% 
+    separate('sample', c("age.name", "id", "tissue", "age"), sep = "[_]", remove = F) %>% 
+    dplyr::select(-age.name, -id) %>% 
+    dplyr::mutate(age = case_when(age == '124w' ~ 'old',
+                                  age == '18w' ~ 'young'))
+
+norm <- norm %>% 
+    mutate(te.annotation = paste0(order, '|', super_family, '|', family, '|', start)) %>% 
+    dplyr::select(te.annotation, sample, TPM) %>% 
+    spread(sample, TPM) %>%
+    column_to_rownames(var = 'te.annotation')
+
+norm <- as.matrix(norm)
+
+norm <- t(apply(norm, 1, function(x) calc_z_score(x, capped = 2)))
+
+# removes rows full of NA --> Why such rows are there?
+norm <- norm[rowSums(is.na(norm)) != ncol(norm), ]
+
+heatmap_top50(norm, 'skin')

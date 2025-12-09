@@ -65,6 +65,7 @@ fig_index(plot = up_set_pl,
 # Just to get the overlap between all conditions.
 # ============================================================================================================
 
+
 library(VennDiagram)
 
 venn <- venn.diagram(
@@ -106,3 +107,125 @@ venn <- venn.diagram(
 )
 
 grid::grid.draw(venn)
+
+
+
+# -----------------------------------------------------------------------------------------------------------
+# UpSet-plot for DETEs
+# You can adapt the adjusted p-value to play around
+# -----------------------------------------------------------------------------------------------------------
+
+deTEs <- sapply(unique(deseq_tes$sex_tissue), function(x){
+    
+    deseq_tes %>% 
+        filter(sex_tissue == x, padj <= 0.05) %>% 
+        pull(te_id) %>% 
+        unique()
+})
+
+upset(
+    fromList(deTEs),
+    nsets = length(unique(deseq_tes$sex_tissue)),
+    nintersects = 20,
+    order.by = "freq",
+    sets.bar.color = tissue.color[c(2, 3, 4, 2, 3)],
+    main.bar.color = "gray23",
+    matrix.color = "gray23",
+    point.size = 1.5,
+    line.size = 1,
+    text.scale = c(2, 1.5, 2, 1.5, 2, 1.5),
+    mb.ratio = c(0.6, 0.4),
+    sets.x.label = "Number of expressed TEs",
+    mainbar.y.label = "Number of TEs in intersection",
+    keep.order = TRUE
+)
+
+# -----------------------------------------------------------------------------------------------------------
+# Correlation of overlapping TEs in brain
+# -----------------------------------------------------------------------------------------------------------
+
+brain_overlap <- intersect(deTEs$male_brain, deTEs$female_brain)
+
+# Filter for the specific set of TEs and rearrange the table to have female on x and male on y axis
+
+detes_brain_female <- deseq_tes %>% 
+    filter(te_id %in% brain_overlap, sex == 'female', tissue == 'brain') %>% 
+    dplyr::select(te_id, log2FoldChange) %>% 
+    rename(log2FC_female = log2FoldChange)
+
+detes_brain_male <- deseq_tes %>% 
+    filter(te_id %in% brain_overlap, sex == 'male', tissue == 'brain') %>% 
+    dplyr::select(te_id, log2FoldChange) %>% 
+    rename(log2FC_male = log2FoldChange)
+
+detes_brain_merged <- inner_join(detes_brain_female, detes_brain_male, by = 'te_id')
+
+cor_brain <- cor.test(detes_brain_merged$log2FC_female, detes_brain_merged$log2FC_male, method = 'pearson')
+
+p_brain <- ggplot(detes_brain_merged, aes(x = log2FC_female, y = log2FC_male)) +
+    geom_point(color = 'gray23', alpha = 0.7, size = 2) +
+    geom_smooth(method = 'lm', color = tissue.color['brain'], fill = tissue.color['brain'], alpha = 0.3) +
+    theme_classic() +
+    labs(title = paste0('Brain: R = ', round(cor_brain$estimate, 2), ', p-value = ', signif(cor_brain$p.value, 3)),
+         x = 'log2FC Female',
+         y = 'log2FC Male') +
+    theme(text = element_text(size = 14),
+          plot.title = element_text(hjust = 0.5, size = 16))
+
+
+# Where is the specific set of TEs located in a genomic context?
+
+deseq_tes %>% 
+    filter(te_id %in% brain_overlap, sex == 'female', tissue == 'brain') %>% 
+    ggplot(aes(x = position, fill = position)) +
+    geom_bar()
+
+deseq_tes %>% 
+    filter(te_id %in% brain_overlap, sex == 'female', tissue == 'brain') %>% 
+    ggplot(aes(x = order, fill = position)) +
+    geom_bar()
+
+knitr::kable(
+deseq_tes %>% 
+    filter(te_id %in% brain_overlap, sex == 'female', tissue == 'brain') %>% 
+    dplyr::select(te_id, ensembl_gene_id, external_gene_name) %>% 
+    splitTEID('te_id'),
+format = "markdown")
+
+# -----------------------------------------------------------------------------------------------------------
+# UpSet-plot for DETEs of the public data set
+# -----------------------------------------------------------------------------------------------------------
+
+aging_tes::load_rna_seq_public_data_env()
+
+deseq_te_public <- fread(paste0(rna_seq_deseq_dir, "deseq_results_te_instances_public.csv")) %>% 
+    mutate(sex_tissue = paste0(sex, "_", tissue))
+
+
+
+deTEs <- sapply(unique(deseq_te_public$sex_tissue), function(x){
+    
+    deseq_te_public %>% 
+        filter(sex_tissue == x, padj <= 0.05) %>% 
+        pull(te_id) %>% 
+        unique()
+})
+
+upset(
+    fromList(deTEs),
+    nsets = length(unique(deseq_te_public$sex_tissue)),
+    nintersects = 20,
+    order.by = "freq",
+    #sets.bar.color = tissue.color[c(2, 3, 4, 2, 3)],
+    main.bar.color = "gray23",
+    matrix.color = "gray23",
+    point.size = 1.5,
+    line.size = 1,
+    text.scale = c(1.5, 1.2, 1.5, 1.2, 1.5, 1.2),
+    #mb.ratio = c(0.6, 0.4),
+    sets.x.label = "Number of expressed TEs",
+    mainbar.y.label = "Number of TEs in intersection",
+    keep.order = TRUE
+)
+
+

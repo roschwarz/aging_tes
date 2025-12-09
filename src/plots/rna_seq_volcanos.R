@@ -129,12 +129,235 @@ ggsave(plot = volcano.old,
 )
 
 
-if (!"aging_tes" %in% loadedNamespaces()) {
-    devtools::load_all("env/")
-}
+# ------------------------------------------------------------------------------
+# Panal 1B Volcano and Kimura distance plots for DETEs
+# ------------------------------------------------------------------------------
 
-aging_tes::load_rna_seq_env()
-aging_tes::load_plotting_env()
+
+brain_detes_pl <- create_te_analysis_panel(deseq_data = deseq.te.merged %>% filter(tissue == 'brain'), 
+                         tissue_name = 'brain', 
+                         order_colors = order.color,
+                         fdr_threshold = 0.05,
+                         base_font_size = 10,
+                         min_font_size = 8,
+                         font_family = 'sans',
+                         section = 'top',
+                         common.legend = FALSE)
+
+skin_detes_pl <- create_te_analysis_panel(deseq_data = deseq.te.merged %>% filter(tissue == 'skin'), 
+                         tissue_name = 'skin', 
+                         order_colors = order.color,
+                         fdr_threshold = 0.05,
+                         base_font_size = 10,
+                         min_font_size = 8,
+                         font_family = 'sans',
+                         section = 'top',
+                         common.legend = FALSE)
+
+blood_detes_pl <- create_te_analysis_panel(deseq_data = deseq.te.merged %>% filter(tissue == 'blood'), 
+                         tissue_name = 'blood', 
+                         order_colors = order.color,
+                         fdr_threshold = 0.05,
+                         base_font_size = 10,
+                         min_font_size = 8,
+                         font_family = 'sans',
+                         section = 'top',
+                         common.legend = FALSE)
+
+combined_detes_pl <- ggarrange(brain_detes_pl, 
+          skin_detes_pl,
+          blood_detes_pl,
+          ncol = 1,
+          nrow = 3,
+          common.legend = TRUE,
+          legend = 'bottom')
+
+
+meta <- list(name = 'te_instances_volcano_detes_kimura',
+             description = 'Volcano and Kimura distance plots of differentially expressed transposable elements in male brain, skin and blood',
+             tags = c('expression', 'rna-seq', 'TE', 'kimura'),
+             parameters = list(FDR = 0.05, tissues = c('brain', 'skin', 'blood'), sex = c('male')),
+             script = 'rna_seq_volcano.R'
+)
+
+fig_index(plot = combined_detes_pl,
+          outdir = figure_dir,
+          meta = meta,
+          index_file = 'figure_index.tsv',
+          width = 18,
+          height = 12,
+          dpi = 300,
+          format = 'pdf')
+
+
+
+# ------------------------------------------------------------------------------
+# Supplemental 1 Volcano and Kimura distance plots for DETEs and Overlap
+# ------------------------------------------------------------------------------
+
+# Overlap
+
+brain_tes <- deseq.te.merged %>% filter(tissue == 'brain', padj <= 0.05)
+skin_tes <- deseq.te.merged %>% filter(tissue == 'skin', padj <= 0.05)
+blood_tes <- deseq.te.merged %>% filter(tissue == 'blood', padj <= 0.05)
+
+expressed_TEs <- sapply(unique(c("brain", "skin", "blood"), function(x){
+    print(x)
+    # deseq.te.merged %>% 
+    #     filter(tissue == x, !is.na(padj)) %>% 
+    #     pull(te_id) %>% 
+    #     unique()
+}))
+
+
+library(VennDiagram)
+
+venn <- venn.diagram(
+    x = expressed_TEs,
+    category.names = names(expressed_TEs),
+    
+    
+    # Circles
+    lwd = 2,  
+    #fill = tissue.color[2:4], #c('#264653', '#2A9D8F',  '#E9C46A'),
+    alpha = c(0.7, 0.7, 0.7, 0.7, 0.7),
+    
+    
+    # Number
+    cex = 1, # font size
+    fontface = "bold",
+    fontfamily = "arial",
+    # 
+    # # Set names
+    cat.cex = 1.5,
+    cat.default.pos = "outer",
+    cat.fontface = "bold",
+    cat.fontfamily = "arial",
+    # cat.pos = c(-27, 27),
+    cat.dist = c(0.055, 0.055, 0.055, 0.055, 0.055),
+    # main = header,
+    scaled = F,
+    print.mode = c("raw", "percent"),
+    
+    # Output
+    filename = NULL, #paste0(figures, 'Panel_2C_VennDiagram.svg'),
+    imagetype = "svg",
+    output = FALSE,
+    width = 200,
+    height = 500,
+    resolution = 300,
+    disable.logging = TRUE
+    
+)
+
+grid::grid.draw(venn)
+
+brain_detes_full_pl <- create_te_analysis_panel(deseq_data = deseq.te.merged %>% filter(tissue == 'brain'), 
+                         tissue_name = 'brain', 
+                         order_colors = order.color,
+                         fdr_threshold = 0.05,
+                         base_font_size = 10,
+                         min_font_size = 8,
+                         font_family = 'sans',
+                         section = 'full',
+                         common.legend = FALSE)
+
+skin_detes_full_pl <- create_te_analysis_panel(deseq_data = deseq.te.merged %>% filter(tissue == 'skin'), 
+                         tissue_name = 'skin', 
+                         order_colors = order.color,
+                         fdr_threshold = 0.05,
+                         base_font_size = 10,
+                         min_font_size = 8,
+                         font_family = 'sans',
+                         section = 'full',
+                         common.legend = FALSE)
+
+blood_detes_full_pl <- create_te_analysis_panel(deseq_data = deseq.te.merged %>% filter(tissue == 'blood'), 
+                         tissue_name = 'blood', 
+                         order_colors = order.color,
+                         fdr_threshold = 0.05,
+                         base_font_size = 10,
+                         min_font_size = 8,
+                         font_family = 'sans',
+                         section = 'full',
+                         common.legend = FALSE)
+
+combined_detes_pl <- ggarrange(brain_detes_full_pl, 
+          skin_detes_full_pl,
+          blood_detes_full_pl)
+
+
+meta <- list(name = 'te_instances_volcano_detes_kimura',
+             description = 'Volcano and Kimura distance plots of differentially expressed transposable elements in male brain, skin and blood',
+             tags = c('expression', 'rna-seq', 'TE', 'kimura'),
+             parameters = list(FDR = 0.05, tissues = c('brain', 'skin', 'blood'), sex = c('male')),
+             script = 'rna_seq_volcano.R'
+)
+
+fig_index(plot = combined_detes_pl,
+          outdir = figure_dir,
+          meta = meta,
+          index_file = 'figure_index.tsv',
+          width = 18,
+          height = 12,
+          dpi = 300,
+          format = 'pdf')
+
+
+
+# ------------------------------------------------------------------------------
+# Volcano plots for all TEs for females
+# ------------------------------------------------------------------------------
+
+deseq_te_merged_female <- fread(paste0(table_dir, deseq_results_te_csv_female)) %>% 
+    mutate(sex = 'female',
+           sex_tissue = paste0(sex, "_", tissue))
+
+
+female_brain_full <- create_te_analysis_panel(deseq_data = deseq_te_merged_female %>% filter(tissue == 'brain'), 
+                         tissue_name = 'brain', 
+                         order_colors = order.color,
+                         fdr_threshold = 0.05,
+                         base_font_size = 10,
+                         min_font_size = 8,
+                         font_family = 'sans',
+                         section = 'full',
+                         common.legend = FALSE)
+
+female_skin_full <- create_te_analysis_panel(deseq_data = deseq_te_merged_female %>% filter(tissue == 'skin'), 
+                                              tissue_name = 'skin', 
+                                              order_colors = order.color,
+                                              fdr_threshold = 0.05,
+                                              base_font_size = 10,
+                                              min_font_size = 8,
+                                              font_family = 'sans',
+                                              section = 'full',
+                                              common.legend = FALSE)
+
+
+
+combined_female_pl <- ggarrange(female_brain_full,
+                                female_skin_full, 
+          ncol = 1,
+          nrow = 2)
+
+
+meta <- list(name = 'female_te_instances_volcano_detes_kimura',
+             description = 'Volcano and Kimura distance plots of differentially expressed transposable elements in female brain and skin',
+             tags = c('expression', 'rna-seq', 'TE', 'kimura'),
+             parameters = list(FDR = 0.05, tissues = c('brain', 'skin'), sex = c('female')),
+             script = 'rna_seq_volcano.R'
+)
+
+fig_index(plot = combined_female_pl,
+          outdir = figure_dir,
+          meta = meta,
+          index_file = 'figure_index.tsv',
+          width = 18,
+          height = 12,
+          dpi = 300,
+          format = 'pdf')
+
 
 
 # ------------------------------------------------------------------------------
