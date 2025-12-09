@@ -192,6 +192,37 @@ save(indie_te_island_categorized,
      file = paste0(tables_and_co, "indie_te_island_categorized.Rdata"))
 
 
+
+# ======================================================================
+# Count occurences
+# ======================================================================
+# count super families and order the final data frame
+
+super_fam_counts <- do.call('rbind', sapply(tissues, simplify = F, function(x){
+    
+    df <- indie_te_island_categorized$instance[[x]] %>% 
+        group_by(island_type) %>% 
+        count(super_family) %>% 
+        ungroup() %>%
+        arrange(island_type, desc(n)) %>%
+        mutate(tissue = x)
+    
+    return(df)
+    
+}))
+
+# rearrange the table to have the island types in columns so it should look like tissue, super_family, single, double, multiple
+# keep those that have at least a count of 10 in one of the categories
+super_fam_counts <- super_fam_counts %>%
+    filter(n >= 10) %>%
+    tidyr::pivot_wider(names_from = island_type, values_from = n, values_fill = 0) %>%
+    arrange(tissue, desc(single), desc(double), desc(multiple)) %>% 
+    mutate(super_family = case_when(super_family == "Alu" ~ "B1", .default = super_family))
+    
+write.csv(super_fam_counts,
+          file = paste0(table_dir, "indie_te_island_super_family_counts.csv"),
+          row.names = F)
+
 # ======================================================================
 # TE island gene association 
 # ======================================================================
