@@ -56,7 +56,7 @@ load_cage_peak_annotation <- function(){
         
     })
     
-    base_path <- paste0(getwd(), "/env/R/data")
+    base_path <- paste0(getwd(), "/env/R/load_data")
     
     annotation_files <- c("annotations.R")
     

@@ -3,6 +3,52 @@
 ###################
 
 #' @export
+load_gene_tss_gr <- function(dataset = 'mmusculus_gene_ensembl',
+                             version = 102,
+                             std_chr = TRUE,
+                             style = c("UCSC", "Ensembl")){
+    
+    style <-  match.arg(style)
+    # 1) Mouse-TSS from ensembl 
+    ensembl <- useEnsembl(biomart = "ensembl",
+                          dataset = dataset,
+                          version = version)  # Ensembl Mouse v102
+    
+    tss_df <- getBM(
+        mart = ensembl,
+        attributes = c("ensembl_gene_id", "mgi_symbol", "ensembl_transcript_id",
+                       "chromosome_name", "strand", "transcription_start_site", "external_gene_name")
+    )
+    
+    
+    # only keep standard chromosomes
+    # mitochondrial chromsome ignored
+    if (std_chr){
+        std_chr <- c(as.character(1:19), "X", "Y")
+        tss_df <- tss_df %>% filter(chromosome_name %in% std_chr)
+    }
+    
+    # UCSC-Style Seqnames ('chr' Prefix; MT -> chrM)
+    if (style == "UCSC"){
+        tss_df <- tss_df %>%
+            mutate(seqname = ifelse(chromosome_name == "MT", "chrM", paste0("chr", chromosome_name)))
+    }
+    
+    # all TSS, multiple TSS per gene are possible
+    tss_tx_gr <- GRanges(
+        seqnames = tss_df$seqname,
+        ranges   = IRanges(start = tss_df$transcription_start_site,
+                           end   = tss_df$transcription_start_site),
+        strand   = ifelse(tss_df$strand == 1, "+", "-"),
+        ensembl_gene_id       = tss_df$ensembl_gene_id,
+        mgi_symbol            = tss_df$mgi_symbol,
+        ensembl_transcript_id = tss_df$ensembl_transcript_id
+    )
+    
+    return(tss_tx_gr)
+}
+
+#' @export
 load_gene_ranges <- function(){
     
     if (!exists("geneRanges")) {

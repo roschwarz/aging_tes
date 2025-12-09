@@ -30,7 +30,7 @@ load_rna_seq_env <- function(){
     deseq_results_mixed <<- "deseq_mixed_salmonTE.Rdata"
     deseq_results_mixed_csv <<- "02_deseq_results_mixed.csv"
     
-    base_path <- paste0(getwd(), "/env/R/data")
+    base_path <- paste0(getwd(), "/env/R/load_data")
     
     rna_files <- c("rna_seq_load_deseq_tes.R")
     
@@ -68,7 +68,7 @@ load_rna_seq_female_old_env <- function(){
     deseq_results_mixed <<- "deseq_mixed_salmonTE.Rdata"
     deseq_results_mixed_csv <<- "02_deseq_results_female_mixed.csv"
     
-    base_path <- paste0(getwd(), "/env/R/data")
+    base_path <- paste0(getwd(), "/env/R/load_data")
     
     rna_files <- c("rna_seq_load_deseq_tes.R")
     
@@ -139,7 +139,7 @@ load_all_rna_seq_envs <- function(sex, base_results_path = "./results/rna_seq"){
     
     env$files <- create_file_mapping(sex)
     
-    base_path <- paste0(getwd(), "/env/R/data")
+    base_path <- paste0(getwd(), "/env/R/load_data")
     
     rna_files <- c("rna_seq_load_deseq_tes.R", "annotations.R")
     
@@ -207,7 +207,7 @@ load_foo_rna_seq_env <- function(sex, base_results_path = "./results/rna_seq/") 
     }
     
     # Zusätzliche R-Dateien sourcen
-    base_path <- paste0(getwd(), "/env/R/data")
+    base_path <- paste0(getwd(), "/env/R/load_data")
     rna_files <- c("rna_seq_load_deseq_tes.R", "annotations.R")
     
     for (f in rna_files) {
@@ -243,7 +243,7 @@ load_rna_seq_female_env <- function(){
     deseq_results_mixed <<- "deseq_mixed_salmonTE.Rdata"
     deseq_results_mixed_csv <<- "02_deseq_results_female_mixed.csv"
     
-    base_path <- paste0(getwd(), "/env/R/data")
+    base_path <- paste0(getwd(), "/env/R/load_data")
     
     rna_files <- c("rna_seq_load_deseq_tes.R", "annotations.R")
     
@@ -326,7 +326,7 @@ load_rna_seq_public_data_env <- function(){
     )
     
     
-    base_path <- paste0(getwd(), "/env/R/data")
+    base_path <- paste0(getwd(), "/env/R/load_data")
     
     rna_files <- c("rna_seq_load_deseq_tes.R")
     

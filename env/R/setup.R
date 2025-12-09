@@ -132,7 +132,7 @@ load_analysis_env <- function(){
 #' @export
 load_annotations <- function(){
     message("→ Loading annotations...")
-    base_path <- paste0(getwd(), "/env/R/data")
+    base_path <- paste0(getwd(), "/env/R/load_data")
     
     annotations <- c("annotations.R")
     
