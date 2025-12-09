@@ -1,21 +1,40 @@
 #!/usr/bin/bash
 #
 
-TE_ISLAND_PATH="../../results/te_island/"
+#TE_ISLAND_PATH="../../results/te_island/"
+#
+#for tissue in blood brain_downsampled skin; do
+#
+#    bedtools getfasta -fi /misc/paras/data/genomes/GRCm38_v102/GRCm38.fa \
+#        -fo "$TE_ISLAND_PATH"/"$tissue"_indie_te_island.fa \
+#        -bed "$TE_ISLAND_PATH"/"$tissue"_indie_te_island.bed \
+#        -nameOnly
+#
+#    orfipy "$TE_ISLAND_PATH"/"$tissue"_indie_te_island.fa \
+#        --bed "$tissue"_te_islands_orfs.bed \
+#        --min 100 \
+#        --max 10000 \
+#        --procs 20 \
+#        --table 1 \
+#        --outdir "$TE_ISLAND_PATH"/orfs_"$tissue" \
+#        --longest
+#done
 
-for tissue in blood brain_downsampled skin; do
+TEITx_PATH="../../results/TEItx/"
 
-    bedtools getfasta -fi /misc/paras/data/genomes/GRCm38_v102/GRCm38.fa \
-        -fo "$TE_ISLAND_PATH"/"$tissue"_indie_te_island.fa \
-        -bed "$TE_ISLAND_PATH"/"$tissue"_indie_te_island.bed \
-        -nameOnly
+for tissue in blood brain skin; do
 
-    orfipy "$TE_ISLAND_PATH"/"$tissue"_indie_te_island.fa \
-        --bed "$tissue"_te_islands_orfs.bed \
+    #bedtools getfasta -fi /misc/paras/data/genomes/GRCm38_v102/GRCm38.fa \
+    #    -fo "$TE_ISLAND_PATH"/"$tissue"_indie_te_island.fa \
+    #    -bed "$TE_ISLAND_PATH"/"$tissue"_indie_te_island.bed \
+    #    -nameOnly
+
+    orfipy "$TEITx_PATH"/teitx."$tissue".fa \
+        --bed "$tissue"_teitx_orfs.bed \
         --min 100 \
         --max 10000 \
         --procs 20 \
         --table 1 \
-        --outdir "$TE_ISLAND_PATH"/orfs_"$tissue" \
+        --outdir "$TEITx_PATH"/orfs_"$tissue" \
         --longest
 done
