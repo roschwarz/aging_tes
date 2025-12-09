@@ -38,6 +38,9 @@ suppressPackageStartupMessages({
     library(biomaRt)
     library(gt)
     library(UpSetR)
+    library(VennDiagram)
+    library(scales)  # for label_percent()
+    library(ggbreak)
 })
 
 options(scipen = 999) # prevent to switching to scientific notation like 1e+06
@@ -114,7 +117,7 @@ load_analysis_env <- function(){
     message("→ Loading analysis environment...")
     base_path <- paste0(getwd(), "/env/R/analysis")
     
-    analysis_files <- c("deseq.R")
+    analysis_files <- c("deseq.R", "goAnalysis.R")
     
     for (f in analysis_files){
         source(file.path(base_path, f))
