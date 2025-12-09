@@ -5,3 +5,13 @@ doc
 foo
 .snakemake
 tmp/
+te_island_lncRNA.R
+te_island_pipeline.R
+categorize_te_island.R
+LINE_SINE_correlation.R
+dexSeq.R
+rna_seq_female_old.sh
+rna_seq_PCA.R
+rna_seq_UpSetPlot.R
+rna_seq_UpSetPlot.R
+sox_analysis.R
