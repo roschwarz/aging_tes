@@ -21,6 +21,7 @@ theme_rob <- function(base_size = 14, base_family = 'sans'){
             
             # Facett stuff
             panel.spacing.x = unit(0, "lines"),
+            panel.spacing.y = unit(0, "lines"),
             strip.background = element_rect(fill = 'white'),
             strip.text = element_text(size = rel(0.85), face = "bold")
         )
