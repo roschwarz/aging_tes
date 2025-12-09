@@ -72,34 +72,77 @@ volcanoPlot <- function(df,
     
     if (!is.null(facet)) {
         
-        y_count_label = (-log10(min(df$padj))) - 0.2
-        n_up_regulated = df %>% filter(Expression == 'Up') %>% dplyr::count(!!sym(facet))
-        n_down_regulated = df %>% filter(Expression == 'Down') %>% dplyr::count(!!sym(facet))
+        if (length(facet) == 1) {
+            
+            message("Creating a facet grid with one variable.")
+            
+            y_count_label = (-log10(min(df$padj))) - 0.2
+            n_up_regulated = df %>% filter(Expression == 'Up') %>% dplyr::count(!!sym(facet))
+            n_down_regulated = df %>% filter(Expression == 'Down') %>% dplyr::count(!!sym(facet))
+            
+            pl <- pl +
+                facet_grid(cols = vars(!!sym(facet))) +
+                geom_text(
+                    data = n_up_regulated,
+                    color = direction.color[['up']],
+                    mapping = aes(
+                        x = x_max,
+                        y = y_count_label,
+                        label = paste0("n=", n)
+                    ),
+                    hjust = 1,
+                    size = 8/.pt
+                ) +
+                geom_text(
+                    data = n_down_regulated,
+                    color = direction.color[['down']],
+                    mapping = aes(
+                        x = -x_max,
+                        y = y_count_label,
+                        label = paste0("n=", n)
+                    ),
+                    hjust = 0,
+                    size = 8/.pt
+                )
+        }else if(length(facet) == 2){
+            
+            message("Creating a facet grid with two variables.")
+            
+            y_count_label = (-log10(min(df$padj))) - 0.2
+            n_up_regulated = df %>% filter(Expression == 'Up') %>% dplyr::count(!!sym(facet[1]), !!sym(facet[2]))
+            n_down_regulated = df %>% filter(Expression == 'Down') %>% dplyr::count(!!sym(facet[1]), !!sym(facet[2]))
+            
+            pl <- pl +
+                facet_grid(rows = vars(!!sym(facet[1])),
+                    cols = vars(!!sym(facet[2]))) +
+                geom_text(
+                    data = n_up_regulated,
+                    color = direction.color[['up']],
+                    mapping = aes(
+                        x = x_max,
+                        y = y_count_label,
+                        label = paste0("n=", n)
+                    ),
+                    hjust = 1,
+                    size = 8/.pt
+                ) +
+                geom_text(
+                    data = n_down_regulated,
+                    color = direction.color[['down']],
+                    mapping = aes(
+                        x = -x_max,
+                        y = y_count_label,
+                        label = paste0("n=", n)
+                    ),
+                    hjust = 0,
+                    size = 8/.pt
+                )
+            
+            
+        }else{
+            stop("Facet can only have one or two variables.")
+        }
         
-        pl <- pl +
-            facet_grid(cols = vars(!!sym(facet))) +
-            geom_text(
-                data = n_up_regulated,
-                color = direction.color[['up']],
-                mapping = aes(
-                    x = x_max,
-                    y = y_count_label,
-                    label = paste0("n=", n)
-                ),
-                hjust = 1,
-                size = 8/.pt
-            ) +
-            geom_text(
-                data = n_down_regulated,
-                color = direction.color[['down']],
-                mapping = aes(
-                    x = -x_max,
-                    y = y_count_label,
-                    label = paste0("n=", n)
-                ),
-                hjust = 0,
-                size = 8/.pt
-            )
     }else{
         
         y_count_label = (-log10(min(df$padj))) - 0.2
