@@ -122,7 +122,7 @@ calcRelativePosition <- function(regions.of.interest){
 #--------------------------------- Annotation stuff ----------------------------
 
 
-create_TE_Instances <- function(teRegionRanges, teRanges, file = 'data/shared/mm10_TE_region_instances_extended.Rdata') {
+create_TE_Instances <- function(teIslandRanges, teRanges, file = 'data/shared/mm10_TE_island_instances_extended.Rdata') {
     # This function intersects TE islands with TEs to get the information about the composition of TE islands. 
     # In addition, the relative position of each TE within the TE island is calculated and the ID of the TEs is
     # split to get meta information about the respective TE.
@@ -131,15 +131,15 @@ create_TE_Instances <- function(teRegionRanges, teRanges, file = 'data/shared/mm
     
     if (file.exists(file)) {
         print("An annotation is already available, which is loaded.")
-        teRegionInstances <- loadRdata(file)
+        teIslandInstances <- loadRdata(file)
     } else{
         
-        teRegionInstances <-
-            intersectGranger(teRegionRanges, teRanges, tab = 'all')
+        teIslandInstances <-
+            intersectGranger(teIslandRanges, teRanges, tab = 'all')
         
         # TEs can intersect with multiple genes, so that they occur multiple times in
         # the teRange objects. Therefore an unique is applied at the end of the pipeline
-        teRegionInstances <- teRegionInstances %>%
+        teIslandInstances <- teIslandInstances %>%
             dplyr::select(
                 "query.start" ,
                 "query.end",
@@ -156,13 +156,13 @@ create_TE_Instances <- function(teRegionRanges, teRanges, file = 'data/shared/mm
             unique()
         
         
-        names(teRegionInstances) <-
+        names(teIslandInstances) <-
             c(
-                "te_region_start",
-                "te_region_end",
-                "te_region_strand",
-                "te_region_width",
-                "te_region_id",
+                "te_island_start",
+                "te_island_end",
+                "te_island_strand",
+                "te_island_width",
+                "te_island_id",
                 "te_start",
                 "te_end",
                 "te_strand",
@@ -171,34 +171,34 @@ create_TE_Instances <- function(teRegionRanges, teRanges, file = 'data/shared/mm
             )
         
         # Set the start and end of TEs to the borders of TE Islands. Is this really needed for this approach?
-        teRegionInstances <- teRegionInstances %>%
+        teIslandInstances <- teIslandInstances %>%
             mutate(
-                te_start = case_when(te_start < te_region_start ~ te_region_start, .default = te_start),
-                te_end = case_when(te_end > te_region_end ~ te_region_end, .default = te_end)
+                te_start = case_when(te_start < te_island_start ~ te_island_start, .default = te_start),
+                te_end = case_when(te_end > te_island_end ~ te_island_end, .default = te_end)
             )
         
-        teRegionInstances <- teRegionInstances %>%
-            group_by(te_region_id) %>%
+        teIslandInstances <- teIslandInstances %>%
+            group_by(te_island_id) %>%
             mutate(
                 te_rel_start = case_when(
-                    te_region_strand == "+" ~ ((te_start - te_region_start) * 100 / te_region_width),
-                    .default = (te_region_end - te_end) *
-                        100 / te_region_width
+                    te_island_strand == "+" ~ ((te_start - te_island_start) * 100 / te_island_width),
+                    .default = (te_island_end - te_end) *
+                        100 / te_island_width
                 ),
                 te_rel_end = case_when(
-                    te_region_strand == "+" ~ ((te_end - te_region_start) * 100 / te_region_width),
-                    .default = (te_region_end - te_start) *
-                        100 / te_region_width
+                    te_island_strand == "+" ~ ((te_end - te_island_start) * 100 / te_island_width),
+                    .default = (te_island_end - te_start) *
+                        100 / te_island_width
                 )
             ) %>%
             ungroup() %>%
             blackRcloud::splitTEID('te_id')
         
-        save(teRegionInstances, file = file)
+        save(teIslandInstances, file = file)
         
     }
     
-    return(teRegionInstances)
+    return(teIslandInstances)
     
 }
 
