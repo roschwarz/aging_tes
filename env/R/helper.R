@@ -59,6 +59,23 @@ getCondition_cage <- function(header){
     return(df)
 }
 
+
+getCondition_quant <- function(header){
+    
+    # Returns a df with sample names (finally the row names of the df) and the
+    # condition. The header needs to be separated by an underscore and the
+    # condition needs to be at the second position. Usable for DESeq2.
+    
+    df <- data.frame(SampleID = header)
+    df$condition <- sapply(df$SampleID, function(x) strsplit(x, "_")[[1]][2])
+    
+    rownames(df) <- df$SampleID
+    df$SampleID <- NULL
+    
+    df$condition <- as.factor(df$condition)
+    return(df)
+}
+
 updateHeader <- function(count.matrix){
     
     oldHeader = names(count.matrix)

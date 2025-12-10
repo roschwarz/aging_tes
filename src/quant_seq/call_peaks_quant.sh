@@ -129,12 +129,12 @@ count_peak_reads(){
         mapfile -t bamFiles < <(find $bam_dir -type f -name "*.unique.sorted.bam")
         
         commander::makecmd -a cmds -s '|' -c {COMMANDER[0]}<<- CMD
-            featureCounts
-            -a $gtfFile
-            -s 2
-            -o $count_res/${tissue}_peak_counts.csv
-            -T $threads
-            -t tts
+            featureCounts \
+            -a $gtfFile \
+            -s 2 \
+            -o $count_res/${tissue}_peak_counts.csv \
+            -T $threads \
+            -t tts \
             ${bamFiles[@]}
 		CMD
 
