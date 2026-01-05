@@ -1,5 +1,5 @@
 # --------------------------------- Notes--- -----------------------------------
-# This script is used to identify and caracterize TE Islands based on 
+# This script is used to identify and characterize TE Islands based on 
 # CAGE-, RNA-, and Quantdata
 # 
 # A TE-Island is defined as a TE region ("artificial annotation of TE Island"; see buildTE-region.annotation.sh)
