@@ -89,16 +89,18 @@ data_clean_wo_TE$log.p.adjust <- ifelse(data_clean_wo_TE$enriched == 'depleted',
                                         log10(data_clean_wo_TE$p.adjust), 
                                         -log10(data_clean_wo_TE$p.adjust))
 
-ggplot(data_clean_wo_TE, aes(log.p.adjust, Description, fill = ONTOLOGY)) +
+pl <- ggplot(data_clean_wo_TE, aes(log.p.adjust, Description, fill = ONTOLOGY)) +
     geom_col() +
-    theme_rob(10, base_family = 'arial') +
+    #theme_rob(7, base_family = 'arial') +
     facet_grid(ONTOLOGY~., scales = 'free_y', switch = "y") +
     labs(x = expression(log[10](FDR))) +
-    geom_text(aes(label = paste0(target.count, '/', go.count), hjust = -0.2), color = 'white', family = 'arial', size = 7*0.36) + # size from pt into mm 8 (pt) * 0.36
-    geom_text(aes(label = paste0(target.count, '/', go.count), hjust = +1.2), color = 'white', family = 'arial', size = 7*0.36) + # size from pt into mm 8 (pt) * 0.36
+    geom_text(aes(label = paste0(target.count, '/', go.count), hjust = -0.2), color = 'white', family = 'arial', size = 6/.pt) + # size from pt into mm 8 (pt) * 0.36
+    geom_text(aes(label = paste0(target.count, '/', go.count), hjust = +1.2), color = 'white', family = 'arial', size = 6/.pt) + # size from pt into mm 8 (pt) * 0.36
     scale_fill_manual(values = c('#98afba','#647a85','#264653')) +
     scale_x_break(c(-5, -60)) +
     theme(axis.title.y = element_blank(),
+          axis.title.x = element_text(size = 7),
+          axis.text = element_text(size = 6),
           panel.grid.major = element_blank(), 
           panel.spacing.y = unit(0.25, "lines"),
           panel.border = element_blank(),
@@ -108,6 +110,26 @@ ggplot(data_clean_wo_TE, aes(log.p.adjust, Description, fill = ONTOLOGY)) +
           strip.placement = "outside",
           strip.background = element_rect(color = 'white'),
           plot.margin = unit(c(t=0, r = 0, b = 0, l = 0),'pt'))
+
+
+# Save figure with metadata to index
+meta <- list(name = 'GO_Term_TE_free_genes',
+             description = 'Running GO Term analysis for genes without TEs,',
+             tags = c('Enrichment', 'TE free', 'GO'),
+             parameters = list("Go_Size = between(5, 500)"),
+             script = 'GO_TE_free.genes.R'
+)
+
+fig_index(plot = pl,
+          outdir = figure_dir,
+          meta = meta,
+          index_file = 'figure_index.tsv',
+          width = 17.5,
+          height = 20,
+          dpi = 300,
+          format = 'pdf')
+
+
 
 capture.output(sessionInfo(),
                file = "./src/gene_ontology/GO_TE_free_genes_sessionInfo.txt"
